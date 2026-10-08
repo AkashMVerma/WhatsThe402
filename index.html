@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Agent Access Index</title>
+    <meta name="description" content="How often websites refuse AI agents (403) or ask them to pay (402), by month and industry, from Cloudflare Radar data." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" />
+  </head>
+  <body>
+    <a class="skip" href="#trend">Skip to data</a>
+    <header class="top">
+      <div class="wrap top-inner">
+        <a class="brand" href="#top">Agent Access Index</a>
+        <nav aria-label="Sections">
+          <a href="#trend">Trend</a>
+          <a href="#industries">Industries</a>
+          <a href="#agents">Agents</a>
+          <a href="#method">Method</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top" class="wrap">
+      <section class="intro">
+        <h1>How the web answers AI agents</h1>
+        <p class="lede">
+          When an AI agent fetches a page for a person, the site can serve it, refuse it with
+          <code class="code c403">403</code> Forbidden, or ask for payment with
+          <code class="code c402">402</code> Payment Required. This index tracks both responses across
+          Cloudflare's network, month by month and industry by industry.
+        </p>
+        <p class="source-line" id="source-line"></p>
+      </section>
+
+      <section id="trend" class="block" aria-labelledby="trend-h">
+        <h2 id="trend-h" class="visually-hidden">Monthly trend</h2>
+        <div class="panels">
+          <article class="panel" id="panel-403"></article>
+          <article class="panel" id="panel-402"></article>
+        </div>
+        <div class="mix-block" id="mix-block"></div>
+      </section>
+
+      <section id="industries" class="block" aria-labelledby="ind-h">
+        <div class="block-head">
+          <h2 id="ind-h">Industries</h2>
+          <p class="block-lede">
+            Two measures answer two different questions. <strong>Rate</strong> is how often an industry
+            refuses or charges the agents that visit it. <strong>Share of total</strong> is where all those
+            responses come from. A small industry can have a high rate and still a small share.
+          </p>
+        </div>
+        <div id="industry-explorer"></div>
+      </section>
+
+      <section id="agents" class="block" aria-labelledby="agents-h">
+        <div class="block-head">
+          <h2 id="agents-h">Agents</h2>
+          <p class="block-lede" id="agents-lede"></p>
+        </div>
+        <div id="agents-body"></div>
+      </section>
+
+      <section id="method" class="block" aria-labelledby="method-h">
+        <div class="block-head">
+          <h2 id="method-h">Method and sources</h2>
+        </div>
+        <div id="method-body"></div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="wrap foot-inner">
+        <p>Built by 4Mica from public Cloudflare Radar data. Not affiliated with Cloudflare.</p>
+        <p><a href="data/index.json">Download the dataset (JSON)</a></p>
+      </div>
+    </footer>
+
+    <p class="load-error wrap" id="load-error" hidden></p>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

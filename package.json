@@ -1,0 +1,28 @@
+{
+  "name": "agent-access-index",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "pull": "python3 scripts/pull_radar.py",
+    "data": "python3 scripts/build_dataset.py",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "build:preview": "vite build --mode singlefile --outDir dist-single",
+    "preview": "vite preview",
+    "test:pipeline": "bash tests/pipeline.sh"
+  },
+  "dependencies": {
+    "d3-array": "3.2.4",
+    "d3-scale": "4.0.2",
+    "d3-shape": "3.2.0"
+  },
+  "devDependencies": {
+    "@types/d3-array": "3.2.1",
+    "@types/d3-scale": "4.0.8",
+    "@types/d3-shape": "3.1.6",
+    "typescript": "5.6.3",
+    "vite": "5.4.11",
+    "vite-plugin-singlefile": "2.0.3"
+  }
+}

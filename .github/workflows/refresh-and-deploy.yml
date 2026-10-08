@@ -1,0 +1,100 @@
+name: Refresh data and deploy
+
+on:
+  # Daily refresh. Year-to-date figures move every day; a month's figures
+  # appear in the first run after it ends.
+  schedule:
+    - cron: "17 6 * * *" # 06:17 UTC
+  # "Run workflow" button in the Actions tab.
+  workflow_dispatch:
+    inputs:
+      pull:
+        description: "Pull fresh data from Cloudflare Radar"
+        type: boolean
+        default: true
+  # Code changes redeploy with the dataset already committed.
+  push:
+    branches: [main]
+
+permissions:
+  contents: write # commit refreshed data back to the repo
+  pages: write
+  id-token: write
+
+concurrency:
+  group: refresh-and-deploy
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PULL: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.pull) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        if: env.PULL == 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Pull Cloudflare Radar
+        if: env.PULL == 'true'
+        env:
+          CF_RADAR_TOKEN: ${{ secrets.CF_RADAR_TOKEN }}
+        run: python3 scripts/pull_radar.py
+
+      - name: Build dataset
+        if: env.PULL == 'true'
+        run: python3 scripts/build_dataset.py
+
+      # The raw pull is kept as a downloadable artifact for 90 days.
+      - uses: actions/upload-artifact@v4
+        if: env.PULL == 'true'
+        with:
+          name: radar-pull
+          path: data/pulls/radar-*.json.gz
+          retention-days: 90
+
+      # public/data/index.json is committed every run: git history is the record of
+      # every published number. One raw pull per month is archived in data/pulls/.
+      - name: Commit refreshed data
+        if: env.PULL == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/index.json
+          month=$(date -u +%Y-%m)
+          if ! git ls-files data/pulls | grep -q "radar-$month-"; then
+            git add data/pulls/radar-"$month"-*.json.gz
+          fi
+          if git diff --cached --quiet; then
+            echo "No data changes."
+          else
+            git commit -m "Refresh Cloudflare Radar data $(date -u +%Y-%m-%d)"
+            git push
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

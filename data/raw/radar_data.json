@@ -1,0 +1,49 @@
+{
+ "meta": {"source": "Cloudflare Radar Data Explorer, dataset ai.bots (AI Bots & Crawlers), dateRange 28d ending 2026-08-18, pulled via browser 2026-08-18. Values are % of requests within the filtered set. 'main' summary series.", "note": "Industry/vertical labels are Cloudflare's own taxonomy."},
+ "crawl_purpose_all": {"Training":41.16,"Mixed Purpose":36.84,"Search":15.53,"User Action":4.52,"Undeclared":1.95},
+ "status_by_purpose": {
+  "All": {"200":63.86,"403":14.13,"404":6.62,"429":2.36,"402":0.0},
+  "Training": {"200":64.71,"403":16.98,"404":5.35,"429":2.47,"402":0.0},
+  "Search": {"200":55.79,"403":18.03,"404":9.81,"429":3.73,"402":0.11},
+  "User Action": {"200":26.34,"403":33.96,"404":18.22,"429":6.31,"402":0.41,"401":0.39,"400":0.52,"301":6.40,"302":2.21,"206":1.92}
+ },
+ "user_action_agents": {"ChatGPT-User":53.98,"Perplexity-User":11.53,"TikTokSpider":11.26,"Claude-User":11.25,"MistralAI-User":10.95,"Google-NotebookLM":0.53,"Meta-ExternalFetcher":0.49},
+ "user_action_402_agents": {"ChatGPT-User":88.0,"MistralAI-User":3.63,"TikTokSpider":3.48,"Perplexity-User":3.16,"Claude-User":1.69},
+ "vertical_share_UA": {"all":{"Internet and Telecom":21.10,"Shopping & General Merchandise":19.47,"Computer and Electronics":14.61,"News, Media, and Publications":8.25,"Business and Industry":6.31,"Finance":5.42,"Professional Services":4.70,"Travel and Tourism":4.20,"Gambling":3.80,"Career and Education":2.97,"Real Estate":1.96,"Law and Government":1.55,"Games":1.42,"Health":1.05},
+  "403":{"Internet and Telecom":29.53,"Computer and Electronics":15.07,"News, Media, and Publications":8.42,"Shopping & General Merchandise":7.93,"Business and Industry":6.34,"Professional Services":6.21,"Gambling":5.93,"Travel and Tourism":3.94,"Real Estate":3.80,"Career and Education":3.30,"Finance":2.71,"Law and Government":1.62,"Health":1.05,"Games":0.91},
+  "402":{"Games":55.58,"Shopping & General Merchandise":12.18,"Internet and Telecom":9.92,"News, Media, and Publications":8.96,"Computer and Electronics":2.21,"Career and Education":2.09,"Gambling":1.80,"Travel and Tourism":1.50,"Law and Government":1.17,"Business and Industry":1.04,"Health":0.69,"Professional Services":0.58,"Finance":0.55},
+  "429":{"Shopping & General Merchandise":49.71,"Internet and Telecom":15.07,"Finance":7.70,"Computer and Electronics":5.89,"Travel and Tourism":5.77,"News, Media, and Publications":5.61,"Professional Services":4.44,"Real Estate":2.16}},
+ "industry_share_UA": {"all":{"Retail":17.32,"Computer Software":13.19,"Internet":5.96,"Information Technology and Services":5.80,"Telecommunications":4.84,"Financial Services":4.21,"Online Media":3.95,"Gambling & Casinos":3.54,"Marketing and Advertising":3.07,"Information Services":2.52,"Media":2.22,"Hospitality":2.21,"Real Estate":1.77,"Publishing":1.29,"Leisure, Travel & Tourism":1.23,"other":19.05},
+  "403":{"Computer Software":14.15,"Internet":12.09,"Telecommunications":6.31,"Retail":6.17,"Information Technology and Services":6.03,"Gambling & Casinos":5.65,"Marketing and Advertising":3.69,"Real Estate":3.55,"Publishing":3.12,"Market Research":3.01,"Media":2.76,"Hospitality":2.47,"Financial Services":1.80,"other":18.74},
+  "402":{"Gaming":45.02,"Media":15.29,"Retail":9.56,"Information Technology and Services":3.38,"Internet":2.91,"Media Production":2.30,"Online Media":2.30,"Print & Digital Media":2.27,"Computer Software":1.77,"Newspapers":1.64,"Publishing":0.85},
+  "429":{"Retail":48.41,"Telecommunications":12.29,"Financial Services":7.49,"Computer Software":5.68,"Online Media":5.37,"Leisure, Travel & Tourism":5.25,"Information Services":4.27,"Real Estate":2.12}},
+ "status_within_UA_by_vertical": {
+  "Internet and Telecom":{"200":30.48,"403":31.17,"404":14.97,"429":9.02,"402":0.35},
+  "Shopping & General Merchandise":{"200":40.16,"403":9.02,"404":6.19,"429":32.06,"402":0.46},
+  "Computer and Electronics":{"200":39.19,"403":23.01,"404":17.26,"429":5.09,"402":0.11},
+  "Finance":{"200":30.02,"403":11.15,"404":21.98,"429":17.93,"402":0.08},
+  "Professional Services":{"200":37.90,"403":29.44,"404":9.76,"429":11.92,"402":0.09},
+  "Travel and Tourism":{"200":40.55,"403":21.26,"404":7.74,"429":17.62,"402":0.27},
+  "Health":{"200":48.72,"403":22.89,"404":7.97,"429":0.64,"402":0.50}
+ },
+ "status_within_UA_by_industry": {
+  "Publishing":{"200":30.43,"403":59.71,"404":1.99,"429":0.02,"402":0.63},
+  "Internet":{"200":28.28,"403":43.99,"404":9.31,"429":3.01,"402":0.41},
+  "Real Estate":{"200":27.19,"403":43.83,"404":5.82,"429":14.39,"402":0.08},
+  "Gambling & Casinos":{"200":19.02,"403":36.67,"404":18.87,"429":1.18,"402":0.37},
+  "Telecommunications":{"200":23.87,"403":28.56,"404":6.57,"429":30.63,"402":0.05},
+  "Media":{"200":40.70,"403":27.37,"404":6.72,"429":1.84,"402":5.92},
+  "Hospitality":{"200":45.74,"403":25.21,"404":9.23,"429":2.18,"402":0.41},
+  "Computer Software":{"200":38.37,"403":23.39,"404":17.57,"429":5.17,"402":0.11},
+  "Information Technology and Services":{"200":41.02,"403":22.68,"404":18.76,"429":1.05,"402":0.50},
+  "Newspapers":{"200":64.69,"403":15.05,"404":3.14,"429":0.42,"402":2.48},
+  "Gaming":{"200":31.98,"403":14.38,"404":5.27,"429":0.39,"402":37.65},
+  "Financial Services":{"200":25.23,"403":9.29,"404":24.46,"429":21.29,"402":0.08},
+  "Online Media":{"200":49.07,"403":8.63,"404":6.95,"429":16.26,"402":0.50},
+  "Retail":{"200":40.44,"403":7.71,"404":6.17,"429":33.35,"402":0.47}
+ },
+ "training_comparison": {
+  "Publishing (Training)":{"200":59.52,"403":19.32,"402":0.14,"429":0.19},
+  "Gaming (Training)":{"200":65.74,"403":11.64,"402":2.45,"429":0.19}
+ }
+}
