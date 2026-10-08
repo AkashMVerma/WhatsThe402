@@ -261,7 +261,7 @@ export function initIndustries(host: HTMLElement, d: Dataset) {
   function trendHtml(i: Industry): string {
     if (!i.monthly?.length) {
       return d.meta.hasIndustryTrends
-        ? `<p class="muted">Monthly trends cover the 30 industries with the most agent traffic.</p>`
+        ? `<p class="muted">Monthly trends cover only the industries with the most agent traffic.</p>`
         : "";
     }
     const first = monthLabel(i.monthly[0].month);

@@ -168,7 +168,8 @@ function methodSection(d: Dataset) {
   if (m.monthsPending.length) gaps.push(`${m.monthsPending.map((x) => monthLabel(x)).join(", ")} could not be pulled and is not shown.`);
   if (d.industries.some((i) => !i.trainers))
     gaps.push("Training-crawler rates are missing for some industries whose names contain commas or whose training traffic is too small to report.");
-  if (m.hasIndustryTrends) gaps.push("Monthly industry trends cover the 30 industries with the most agent traffic.");
+  const withTrends = d.industries.filter((i) => i.monthly?.length).length;
+  if (withTrends) gaps.push(`Monthly industry trends cover the ${withTrends} industries with the most agent traffic.`);
   if (m.failedRequests) gaps.push(`${m.failedRequests} Radar requests failed in the latest pull; affected figures are left out rather than estimated.`);
   gaps.push("Radar can revise recent data. Two pulls of the same month a week apart have differed by up to 0.2 percentage points.");
 

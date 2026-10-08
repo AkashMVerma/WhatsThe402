@@ -7,7 +7,7 @@ TMP=$(mktemp -d)
 python3 tests/mock_radar.py 8765 & MOCK=$!
 trap 'kill $MOCK 2>/dev/null; rm -rf "$TMP"' EXIT
 sleep 1
-RADAR_BASE=http://127.0.0.1:8765 CF_RADAR_TOKEN=test python3 scripts/pull_radar.py --sleep 0 --out "$TMP/pulls"
+RADAR_BASE=http://127.0.0.1:8765 CF_RADAR_TOKEN=test python3 scripts/pull_radar.py --rate 200 --workers 8 --out "$TMP/pulls"
 cp public/data/index.json "$TMP/index.real.json"
 python3 scripts/build_dataset.py "$TMP/pulls"
 npx tsc --noEmit

@@ -16,7 +16,7 @@ Hosted on GitHub Pages and refreshed daily by GitHub Actions.
    (the same kind you used for the August pull).
 3. **Turn on Pages:** Settings › Pages › Build and deployment › Source: **GitHub Actions**.
 4. **First run:** Actions › *Refresh data and deploy* › Run workflow (keep "Pull fresh data"
-   ticked). It takes about 10 minutes. The site appears at `https://<owner>.github.io/<repo>/`.
+   ticked). The pull makes about 1,050 requests, capped at 3 per second. The site appears at `https://<owner>.github.io/<repo>/`.
 5. Optional: a custom domain (for example `index.4mica.xyz`) under Settings › Pages.
 
 After that it runs every day at 06:17 UTC. Each run commits the built dataset
@@ -30,7 +30,7 @@ and GitHub emails the repo admins; the site keeps its previous version.
 
 ```sh
 npm install
-CF_RADAR_TOKEN=... npm run pull   # ~1,000 requests, 6-10 minutes -> data/pulls/
+CF_RADAR_TOKEN=... npm run pull   # ~1,050 requests at up to 3/s, parallel -> data/pulls/
 npm run data                      # newest pull -> public/data/index.json
 npm run dev                       # http://localhost:5173
 npm run test:pipeline             # end-to-end check against a mock Radar, no token needed

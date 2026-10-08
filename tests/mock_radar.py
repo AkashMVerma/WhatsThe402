@@ -14,7 +14,9 @@ Usage:
 import datetime as dt
 import hashlib
 import json
+import os
 import sys
+import time
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -80,6 +82,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send(400, {"success": False, "errors": [{"code": 10000, "message": msg}], "result": {}})
 
     def do_GET(self):
+        time.sleep(float(os.environ.get("MOCK_LATENCY", "0")))  # imitate a slow API
         CALLS["n"] += 1
         if not self.headers.get("Authorization", "").startswith("Bearer "):
             return self.send(401, {"success": False, "errors": [{"message": "missing token"}]})

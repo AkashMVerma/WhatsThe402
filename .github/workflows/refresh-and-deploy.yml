@@ -28,7 +28,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
       PULL: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.pull) }}
     steps:
@@ -43,7 +43,9 @@ jobs:
         if: env.PULL == 'true'
         env:
           CF_RADAR_TOKEN: ${{ secrets.CF_RADAR_TOKEN }}
-        run: python3 scripts/pull_radar.py
+        # Core data first; industry trends stop starting after 40 minutes so a slow
+        # Radar day still publishes everything else.
+        run: python3 scripts/pull_radar.py --max-minutes 40
 
       - name: Build dataset
         if: env.PULL == 'true'
