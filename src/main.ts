@@ -18,6 +18,28 @@ function sourceLine(d: Dataset) {
     `All figures are shares of requests, not counts. Updated ${dateLabel(d.meta.updated)}.`;
 }
 
+/** Compare the latest month with the same month a year earlier, in the right direction. */
+function yearOnYear(now: number, then: number | null, thenMonth: string | null): string {
+  if (then == null || thenMonth == null) return "";
+  const when = monthLabel(thenMonth);
+  if (then === 0) return now > 0 ? `Up from 0% in ${when}.` : `Unchanged from ${when}.`;
+  const mult = now / then;
+  if (mult >= 3) return `${ratio(mult)} the ${when} rate of ${pct(then)}.`;
+  if (mult <= 1 / 3) return `Down from ${pct(then)} in ${when}, a ${ratio(1 / mult)} fall.`;
+  if (pct(now) === pct(then)) return `Unchanged from ${when}.`;
+  return `${now > then ? "Up" : "Down"} from ${pct(then)} in ${when}.`;
+}
+
+/** If the latest month sits well below the past year's peak, say where the peak was. */
+function peakNote(values: number[], months: string[]): string {
+  const last = values.length - 1;
+  const from = Math.max(0, last - 12);
+  let peak = from;
+  for (let i = from; i < last; i++) if (values[i] > values[peak]) peak = i;
+  if (peak === last || values[last] >= values[peak] * 0.6) return "";
+  return `Peak: ${pct(values[peak])} in ${monthLabel(months[peak])}.`;
+}
+
 function trendPanel(d: Dataset, code: "403" | "402") {
   const el = document.getElementById(`panel-${code}`)!;
   const months = d.monthly.map((m) => m.month);
@@ -31,14 +53,7 @@ function trendPanel(d: Dataset, code: "403" | "402") {
 
   const name = code === "403" ? "Forbidden" : "Payment Required";
   const verb = code === "403" ? "refused" : "asked to pay";
-  let change = "";
-  if (then != null) {
-    const mult = now / then;
-    change =
-      mult >= 3
-        ? `${ratio(mult)} the ${monthLabel(months[yearAgoIdx])} rate of ${pct(then)}.`
-        : `Up from ${pct(then)} in ${monthLabel(months[yearAgoIdx])}.`;
-  }
+  const change = [yearOnYear(now, then, yearAgoIdx >= 0 ? months[yearAgoIdx] : null), peakNote(agents, months)].join(" ").trim();
 
   el.innerHTML = `
     <header class="panel-head">

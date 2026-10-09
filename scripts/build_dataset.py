@@ -184,8 +184,13 @@ def shift_note(series):
         return None
     d, name, prev, cur = best
     verb = "jumped" if d > 0 else "fell"
-    return (f"The agent {name} rate {verb} from {fmt_pct(prev[name])} in {month_label(prev['month'])} "
+    note = (f"The agent {name} rate {verb} from {fmt_pct(prev[name])} in {month_label(prev['month'])} "
             f"to {fmt_pct(cur[name])} in {month_label(cur['month'])}.")
+    latest = series[-1]
+    # The biggest move is not the whole story if the rate has moved again since.
+    if latest["month"] != cur["month"] and fmt_pct(latest[name]) != fmt_pct(cur[name]):
+        note += f" Latest: {fmt_pct(latest[name])} in {month_label(latest['month'])}."
+    return note
 
 
 # --------------------------------------------------------------------------- build
