@@ -1,310 +1,239 @@
-import { bindMixFigures, lineChart, mixFigure, niceScale } from "./charts";
-import { esc, monthLabel, pct, ratio } from "./format";
+import { lineChart, niceScale } from "./charts";
+import { esc, monthLabel, pct } from "./format";
 import type { Dataset, Industry } from "./types";
 
-type CodeSel = "403" | "402";
-type Measure = "rate" | "share";
-type SortKey = "name" | "value" | "compare" | "ratio";
+type Period = "month" | "ytd";
+type Code = "403" | "402";
 
 interface Row {
   ind: Industry;
-  value: number;
-  compare: number | null;
-  ratio: number | null;
+  v403: number;
+  v402: number;
 }
 
 const PAGE = 20;
+const INFO_SVG = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6.5"></circle><line x1="8" y1="7" x2="8" y2="11.5"></line><circle cx="8" cy="4.8" r="0.6" fill="currentColor"></circle></svg>`;
 
-const COPY = {
-  rate: {
-    explain: (c: CodeSel) =>
-      `Percent of agent requests to each industry answered with ${c}. The grey dot is the same rate for training crawlers.`,
-    value: "Agents",
-    compare: "Trainers",
-    ratio: "Agents ÷ trainers",
-    cmpLegend: "Training crawlers",
-  },
-  share: {
-    explain: (c: CodeSel) =>
-      `Percent of all agent ${c}s that came from each industry. The grey dot is the industry's share of agent traffic; a colored dot to its right means the industry sends more ${c}s than its size suggests.`,
-    value: "Share of all",
-    compare: "Share of traffic",
-    ratio: "Over-index",
-    cmpLegend: "Share of agent traffic",
-  },
-};
-
-function niceMax(v: number): number {
-  if (v <= 0) return 1;
-  const steps = [0.5, 1, 2, 2.5, 5, 10, 20, 25, 40, 50, 60, 80, 100];
-  return steps.find((s) => s >= v) ?? Math.ceil(v / 10) * 10;
+function labelSource(i: Industry): string {
+  if (!i.label) return "Cloudflare label with no published definition.";
+  if (i.label.source === "linkedin") {
+    return i.label.linkedinName
+      ? `Label matches LinkedIn's industry list, where it is now called ${i.label.linkedinName}.`
+      : "Label matches LinkedIn's industry list.";
+  }
+  return "Cloudflare label with no published definition. This is our reading of it.";
 }
 
-export function initIndustries(host: HTMLElement, d: Dataset) {
-  const state = {
-    code: "403" as CodeSel,
-    measure: "rate" as Measure,
-    q: "",
-    includeLow: false,
-    sort: "value" as SortKey,
-    dir: -1,
-    showAll: false,
-    open: new Set<string>(),
-  };
+function niceMax(v: number): number {
+  const steps = [1, 2, 5, 10, 20, 30, 50, 75, 100];
+  return steps.find((s) => s >= v) ?? 100;
+}
+
+export function initIndustries(host: HTMLElement, d: Dataset, getIdx: () => number) {
+  const months = d.monthly.map((m) => m.month);
+  const tracked = d.industries.filter((i) => i.monthly?.length);
   const lowCount = d.industries.filter((i) => i.lowVolume).length;
+  const state = { period: "month" as Period, by: "403" as Code, q: "", includeLow: false, showAll: false, open: new Set<string>() };
 
-  host.innerHTML = `
-    <div class="controls" role="group" aria-label="Industry view">
-      <div class="seg-ctl" role="radiogroup" aria-label="Response code">
-        <button type="button" role="radio" data-code="403" id="ctl-code-403"><code class="code c403">403</code> Forbidden</button>
-        <button type="button" role="radio" data-code="402" id="ctl-code-402"><code class="code c402">402</code> Payment Required</button>
+  host.innerHTML = `<div class="page">
+    <h1 id="ind-title"></h1>
+    <p class="sub" id="ind-sub"></p>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Period">
+        <button type="button" data-period="month">Selected month</button>
+        <button type="button" data-period="ytd">Year to date</button>
       </div>
-      <div class="seg-ctl" role="radiogroup" aria-label="Measure">
-        <button type="button" role="radio" data-measure="rate" id="ctl-m-rate">Rate</button>
-        <button type="button" role="radio" data-measure="share" id="ctl-m-share">Share of total</button>
+      <div class="seg" role="group" aria-label="Rank by">
+        <button type="button" data-by="403">Rank by 403</button>
+        <button type="button" data-by="402">Rank by 402</button>
       </div>
-      <label class="search"><span class="visually-hidden">Find an industry</span>
-        <input type="search" id="ctl-q" placeholder="Find an industry" autocomplete="off" />
-      </label>
-      <label class="check"><input type="checkbox" id="ctl-low" /> Include ${lowCount} low-volume industries</label>
+      <label class="search"><span class="vh">Find an industry</span><input type="search" id="ind-q" placeholder="Find an industry" autocomplete="off"></label>
+      <label class="check" id="ind-low-wrap"><input type="checkbox" id="ind-low"> Include ${lowCount} small industries</label>
     </div>
-    <p class="explain" id="ind-explain"></p>
-    <ul class="legend" id="ind-legend" aria-hidden="true"></ul>
-    <div class="ind-table" role="table" aria-label="Industries">
-      <div class="ind-row ind-headrow" role="row" id="ind-head"></div>
-      <div id="ind-body" role="rowgroup"></div>
-    </div>
-    <div class="ind-foot" id="ind-foot"></div>`;
+    <div class="scroll"><div class="tbl" id="ind-tbl"></div></div>
+    <div id="ind-foot"></div>
+  </div>`;
 
-  const $ = <T extends HTMLElement>(sel: string) => host.querySelector<T>(sel)!;
-  const body = $("#ind-body");
-
-  host.querySelectorAll<HTMLButtonElement>("[data-code]").forEach((b) =>
+  const q = <T extends HTMLElement>(sel: string) => host.querySelector<T>(sel)!;
+  host.querySelectorAll<HTMLButtonElement>("[data-period]").forEach((b) =>
     b.addEventListener("click", () => {
-      state.code = b.dataset.code as CodeSel;
+      state.period = b.dataset.period as Period;
       render();
     }),
   );
-  host.querySelectorAll<HTMLButtonElement>("[data-measure]").forEach((b) =>
+  host.querySelectorAll<HTMLButtonElement>("[data-by]").forEach((b) =>
     b.addEventListener("click", () => {
-      state.measure = b.dataset.measure as Measure;
+      state.by = b.dataset.by as Code;
       render();
     }),
   );
-  $<HTMLInputElement>("#ctl-q").addEventListener("input", (e) => {
+  q<HTMLInputElement>("#ind-q").addEventListener("input", (e) => {
     state.q = (e.target as HTMLInputElement).value.trim().toLowerCase();
     render();
   });
-  $<HTMLInputElement>("#ctl-low").addEventListener("change", (e) => {
+  q<HTMLInputElement>("#ind-low").addEventListener("change", (e) => {
     state.includeLow = (e.target as HTMLInputElement).checked;
     render();
   });
-  // Arrow keys move between options inside each radio group.
-  host.querySelectorAll<HTMLElement>(".seg-ctl").forEach((grp) =>
-    grp.addEventListener("keydown", (e) => {
-      if (!["ArrowLeft", "ArrowRight"].includes(e.key)) return;
-      const btns = [...grp.querySelectorAll<HTMLButtonElement>("button")];
-      const i = btns.indexOf(document.activeElement as HTMLButtonElement);
-      const next = btns[(i + (e.key === "ArrowRight" ? 1 : btns.length - 1)) % btns.length];
-      next.click();
-      next.focus();
-    }),
-  );
 
   function rows(): Row[] {
-    const c = state.code;
-    return d.industries
-      .filter((i) => state.includeLow || !i.lowVolume)
-      .filter((i) => !state.q || i.name.toLowerCase().includes(state.q))
-      .map((ind) => {
-        const value = state.measure === "rate" ? ind.agents[c] : c === "403" ? ind.shareOfAgent403 : ind.shareOfAgent402;
-        const compare = state.measure === "rate" ? (ind.trainers ? ind.trainers[c] : null) : ind.agentTrafficShare;
-        const r = compare != null && compare > 0 ? value / compare : null;
-        return { ind, value, compare, ratio: r };
-      });
-  }
-
-  function sorted(list: Row[]): Row[] {
-    const k = state.sort;
-    const dir = state.dir;
-    const get = (r: Row): number | string | null => (k === "name" ? r.ind.name.toLowerCase() : r[k]);
-    return [...list].sort((a, b) => {
-      const va = get(a);
-      const vb = get(b);
-      if (va == null && vb == null) return 0;
-      if (va == null) return 1; // missing values always sink
-      if (vb == null) return -1;
-      if (typeof va === "string") return va.localeCompare(vb as string) * -dir;
-      return ((va as number) - (vb as number)) * dir;
-    });
-  }
-
-  function headCell(key: SortKey, label: string, cls: string) {
-    const on = state.sort === key;
-    const aria = on ? (state.dir === -1 ? "descending" : "ascending") : "none";
-    const arrow = on ? (state.dir === -1 ? "↓" : "↑") : "";
-    return `<div class="${cls}" role="columnheader" aria-sort="${aria}"><button type="button" class="sort" data-sort="${key}">${label}<span class="arrow" aria-hidden="true">${arrow}</span></button></div>`;
+    const idx = getIdx();
+    const m = months[idx];
+    const base =
+      state.period === "month"
+        ? tracked.map((ind) => {
+            const pt = ind.monthly!.find((x) => x.month === m);
+            return { ind, v403: pt?.["403"] ?? NaN, v402: pt?.["402"] ?? NaN };
+          })
+        : d.industries.filter((i) => state.includeLow || !i.lowVolume).map((ind) => ({ ind, v403: ind.agents["403"], v402: ind.agents["402"] }));
+    return base
+      .filter((r) => !Number.isNaN(r.v403))
+      .filter((r) => !state.q || r.ind.name.toLowerCase().includes(state.q))
+      .sort((a, b) => (state.by === "403" ? b.v403 - a.v403 : b.v402 - a.v402));
   }
 
   function render() {
-    const c = state.code;
-    const copy = COPY[state.measure];
-    host.querySelectorAll<HTMLButtonElement>("[data-code]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.code === c)));
-    host.querySelectorAll<HTMLButtonElement>("[data-measure]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.measure === state.measure)));
-    host.querySelectorAll<HTMLButtonElement>(".seg-ctl button").forEach((b) => (b.tabIndex = b.getAttribute("aria-checked") === "true" ? 0 : -1));
-    $("#ind-explain").textContent = copy.explain(c);
-    $("#ind-legend").innerHTML =
-      `<li><span class="dot-key" style="background:var(--c${c})"></span>Agents</li>` +
-      `<li><span class="dot-key" style="background:var(--cmp)"></span>${copy.cmpLegend}</li>`;
+    const idx = getIdx();
+    const m = months[idx];
+    host.querySelectorAll<HTMLButtonElement>("[data-period]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.period === state.period)));
+    host.querySelectorAll<HTMLButtonElement>("[data-by]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.by === state.by)));
+    q("#ind-low-wrap").hidden = state.period === "month";
 
-    const all = sorted(rows());
+    const isMonth = state.period === "month";
+    q("#ind-title").textContent = isMonth ? `Industries, ${monthLabel(m)}` : `Industries, ${d.meta.windows.ytd.label}`;
+    q("#ind-sub").textContent = isMonth
+      ? `The ${tracked.length} industries with the most agent traffic, for the month picked above. Labels are Cloudflare's; the info icon says what each covers.`
+      : `Every industry with at least ${d.meta.lowVolumeThresholdPct}% of agent traffic, ${d.meta.windows.ytd.label}. Labels are Cloudflare's; the info icon says what each covers.`;
+
+    const all = rows();
     const shown = state.showAll || state.q ? all : all.slice(0, PAGE);
-    const max = niceMax(Math.max(0.01, ...all.map((r) => Math.max(r.value, r.compare ?? 0))));
-    const ticks = [0, max / 2, max];
+    const max402 = niceMax(Math.max(1, ...all.map((r) => r.v402)));
+    const bench = isMonth ? d.monthly[idx].industrySites : d.overall.industrySites;
+    const benchLabel = isMonth ? "All sites with an industry (est.)" : "All sites with an industry";
 
-    $("#ind-head").innerHTML =
-      headCell("name", "Industry", "c-name") +
-      `<div class="c-bar axis-head" role="columnheader"><span class="visually-hidden">Comparison chart</span>${ticks
-        .map((t, i) => `<span class="axis-tick" style="left:${(t / max) * 100}%" data-edge="${i === 0 ? "start" : i === 2 ? "end" : "mid"}" aria-hidden="true">${t}%</span>`)
-        .join("")}</div>` +
-      headCell("value", state.measure === "share" ? `Share of ${c}s` : copy.value, "c-num c-val") +
-      headCell("compare", copy.compare, "c-num c-cmp") +
-      headCell("ratio", copy.ratio, "c-num c-ratio");
-    $("#ind-head")
-      .querySelectorAll<HTMLButtonElement>("[data-sort]")
-      .forEach((b) =>
-        b.addEventListener("click", () => {
-          const k = b.dataset.sort as SortKey;
-          if (state.sort === k) state.dir *= -1;
-          else {
-            state.sort = k;
-            state.dir = k === "name" ? 1 : -1;
-          }
-          render();
-        }),
-      );
+    const bar = (v: number, max: number, color: string) =>
+      `<span class="bar"><span class="bar-track"><span class="bar-fill" style="width:${Math.min(100, (v / max) * 100).toFixed(1)}%;background:${color}"></span></span><span class="bar-val">${pct(v)}</span></span>`;
+    const spark = (ind: Industry | null) => {
+      // Benchmark row: the sites-with-an-industry series, falling back to all agent traffic for months it cannot be estimated.
+      const vals = ind ? ind.monthly?.map((x) => x["403"]) : d.monthly.map((x) => x.industrySites?.["403"] ?? x.agents["403"]);
+      if (!vals) return `<span class="small">Not tracked monthly</span>`;
+      const pts = vals.map((v, k) => `${(k * 9.2 + 2).toFixed(1)},${(28 - (v / 100) * 26).toFixed(1)}`).join(" ");
+      const dotY = (28 - (vals[idx] / 100) * 26).toFixed(1);
+      return `<svg class="spark" viewBox="0 0 190 30" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${ind ? "#9A9A9A" : "var(--red)"}" stroke-width="1.4"></polyline><circle cx="${(idx * 9.2 + 2).toFixed(1)}" cy="${dotY}" r="3" fill="var(--red)"></circle></svg>`;
+    };
 
-    if (!shown.length) {
-      body.innerHTML = `<p class="empty">No industry matches "${esc(state.q)}". ${state.includeLow ? "" : "It may be a low-volume industry; tick the box above to include those."}</p>`;
-    } else {
-      body.innerHTML = shown.map((r) => rowHtml(r, max)).join("");
-    }
+    const head = `<div class="tr head">
+      <span>#</span><span>Industry</span>
+      <span>403 rate, scale 0 to 100%</span>
+      <span>402 rate, scale 0 to ${max402}%</span>
+      <span>403 rate since ${monthLabel(months[0])}</span>
+      <span class="num">Traffic share, year to date</span>
+    </div>`;
+    const benchRow =
+      bench && bench["403"] != null
+        ? `<div class="tr bench">
+          <span></span><span>${benchLabel}</span>
+          ${bar(bench["403"], 100, "var(--red)")}
+          ${bench["402"] != null ? bar(bench["402"], max402, "var(--blue)") : "<span></span>"}
+          ${spark(null)}
+          <span class="num small">100%</span>
+        </div>`
+        : "";
 
-    body.querySelectorAll<HTMLElement>(".trend-host").forEach(mountTrend);
-    bindMixFigures(body);
+    const body = shown
+      .map((r, n) => {
+        const i = r.ind;
+        const open = state.open.has(i.name);
+        const flag = i.lowVolume ? `<span class="flag">Small</span>` : "";
+        const row = `<div class="tr row">
+          <span class="small">${n + 1}</span>
+          <span class="name">
+            <button type="button" class="name-btn" data-open="${esc(i.name)}" aria-expanded="${open}">${esc(i.name)}</button>
+            <span class="info">
+              <button type="button" class="info-btn" data-info aria-expanded="false" aria-label="What ${esc(i.name)} covers">${INFO_SVG}</button>
+              <span class="pop" role="tooltip"><b>${esc(i.name)}</b>${esc(i.label?.desc ?? "No description yet.")}<small>${esc(labelSource(i))}</small></span>
+            </span>
+            ${flag}
+          </span>
+          ${bar(r.v403, 100, "var(--red)")}
+          ${bar(r.v402, max402, "var(--blue)")}
+          ${spark(i)}
+          <span class="num small">${i.agentTrafficShare == null ? "under 0.03%" : pct(i.agentTrafficShare)}</span>
+        </div>`;
+        return row + (open ? detail(i) : "");
+      })
+      .join("");
 
-    body.querySelectorAll<HTMLButtonElement>(".name-btn").forEach((b) =>
+    q("#ind-tbl").innerHTML = head + benchRow + (body || `<p class="small" style="padding:16px 0">No industry matches "${esc(state.q)}".</p>`);
+    q("#ind-foot").innerHTML =
+      !state.q && all.length > PAGE
+        ? `<button type="button" class="more" id="ind-more">${state.showAll ? `Show top ${PAGE}` : `Show all ${all.length}`}</button>`
+        : "";
+    host.querySelector("#ind-more")?.addEventListener("click", () => {
+      state.showAll = !state.showAll;
+      render();
+    });
+
+    host.querySelectorAll<HTMLButtonElement>("[data-open]").forEach((b) =>
       b.addEventListener("click", () => {
-        const n = b.dataset.name!;
+        const n = b.dataset.open!;
         if (state.open.has(n)) state.open.delete(n);
         else state.open.add(n);
         render();
-        body.querySelector<HTMLButtonElement>(`.name-btn[data-name="${CSS.escape(n)}"]`)?.focus();
       }),
     );
-
-    const foot = $("#ind-foot");
-    if (!state.q && all.length > PAGE) {
-      foot.innerHTML = `<button type="button" class="more" id="ctl-more">${state.showAll ? `Show top ${PAGE}` : `Show all ${all.length} industries`}</button>`;
-      foot.querySelector("button")!.addEventListener("click", () => {
-        state.showAll = !state.showAll;
-        render();
-      });
-    } else foot.innerHTML = "";
+    host.querySelectorAll<HTMLButtonElement>("[data-info]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const was = b.getAttribute("aria-expanded") === "true";
+        host.querySelectorAll("[data-info]").forEach((x) => x.setAttribute("aria-expanded", "false"));
+        b.setAttribute("aria-expanded", String(!was));
+      }),
+    );
+    host.querySelectorAll<HTMLElement>(".trend-host").forEach(mountTrend);
   }
 
-  function rowHtml(r: Row, max: number): string {
-    const c = state.code;
-    const x = (v: number) => Math.min(100, (v / max) * 100);
-    const vx = x(r.value);
-    const cx = r.compare != null ? x(r.compare) : null;
-    const lo = cx == null ? vx : Math.min(vx, cx);
-    const hi = cx == null ? vx : Math.max(vx, cx);
-    const open = state.open.has(r.ind.name);
-    const flag = r.ind.lowVolume ? `<span class="flag">Low volume</span>` : "";
-    const noteFlag = r.ind.note ? `<span class="flag flag-note" title="${esc(r.ind.note)}">Note</span>` : "";
-    const ratioTitle = r.ratio == null ? (state.measure === "rate" ? "No training-crawler data" : "Traffic share not published") : "";
-    const label = `${r.ind.name}: agents ${pct(r.value)}, ${COPY[state.measure].cmpLegend.toLowerCase()} ${pct(r.compare)}`;
-
-    return `<div class="ind-row${open ? " is-open" : ""}" role="row">
-      <div class="c-name" role="rowheader"><button type="button" class="name-btn" data-name="${esc(r.ind.name)}" aria-expanded="${open}">${esc(r.ind.name)}</button>${flag}${noteFlag}</div>
-      <div class="c-bar" role="cell"><div class="track" role="img" aria-label="${esc(label)}">
-        <span class="link" style="left:${lo}%;width:${hi - lo}%"></span>
-        ${cx != null ? `<span class="dot dot-cmp" style="left:${cx}%"></span>` : ""}
-        <span class="dot" style="left:${vx}%;background:var(--c${c})"></span>
-      </div></div>
-      <div class="c-num c-val" role="cell">${pct(r.value)}</div>
-      <div class="c-num c-cmp" role="cell">${pct(r.compare)}</div>
-      <div class="c-num c-ratio" role="cell" title="${ratioTitle}">${ratio(r.ratio)}</div>
-    </div>${open ? detailHtml(r.ind) : ""}`;
-  }
-
-  function detailHtml(i: Industry): string {
-    const bars = [{ label: "Agents", groups: i.agentGroups }];
-    if (i.trainerGroups) bars.push({ label: "Training crawlers", groups: i.trainerGroups });
-    return `<div class="ind-detail" role="row"><div role="cell">
+  function detail(i: Industry): string {
+    const trends = i.monthly?.length
+      ? `<div class="trend-grid">
+          <div class="trend-cell"><p>403 rate by month</p><ul class="legend" aria-hidden="true"><li><span class="swatch" style="background:var(--red)"></span>${esc(i.name)}</li><li><span class="swatch" style="background:#9A9A9A"></span>All agent traffic</li></ul><div class="trend-host" data-name="${esc(i.name)}" data-code="403"></div></div>
+          <div class="trend-cell"><p>402 rate by month</p><ul class="legend" aria-hidden="true"><li><span class="swatch" style="background:var(--blue)"></span>${esc(i.name)}</li><li><span class="swatch" style="background:#9A9A9A"></span>All agent traffic</li></ul><div class="trend-host" data-name="${esc(i.name)}" data-code="402"></div></div>
+        </div>`
+      : `<p class="small">Monthly figures cover only the ${tracked.length} industries with the most agent traffic.</p>`;
+    return `<div class="detail">
       <div class="facts">
-        <div><span class="k">Share of agent traffic</span><span class="v">${i.agentTrafficShare == null ? "Under 0.03%" : pct(i.agentTrafficShare)}</span></div>
-        <div><span class="k">Share of all agent <code class="code c403">403</code>s</span><span class="v">${pct(i.shareOfAgent403)}</span></div>
-        <div><span class="k">Share of all agent <code class="code c402">402</code>s</span><span class="v">${pct(i.shareOfAgent402)}</span></div>
+        <span><em>403 rate, year to date</em><b>${pct(i.agents["403"])}</b></span>
+        <span><em>402 rate, year to date</em><b>${pct(i.agents["402"])}</b></span>
+        <span><em>Training crawlers' 403 rate</em><b>${i.trainers ? pct(i.trainers["403"]) : "not reported"}</b></span>
+        <span><em>Share of all agent 403s</em><b>${pct(i.shareOfAgent403)}</b></span>
+        <span><em>Share of all agent 402s</em><b>${pct(i.shareOfAgent402)}</b></span>
       </div>
-      ${mixFigure(bars)}
-      ${i.trainerGroups ? "" : `<p class="muted">Training-crawler data is not available for this industry.</p>`}
-      ${trendHtml(i)}
+      ${trends}
       ${i.note ? `<p class="note">${esc(i.note)}</p>` : ""}
-    </div></div>`;
-  }
-
-  const allAgents = new Map(d.monthly.map((m) => [m.month, m.agents]));
-
-  function trendHtml(i: Industry): string {
-    if (!i.monthly?.length) {
-      return d.meta.hasIndustryTrends
-        ? `<p class="muted">Monthly trends cover only the industries with the most agent traffic.</p>`
-        : "";
-    }
-    const first = monthLabel(i.monthly[0].month);
-    const last = monthLabel(i.monthly[i.monthly.length - 1].month);
-    return `<div class="trend">
-      <h4>Month by month, ${first} to ${last}</h4>
-      <div class="trend-grid">
-        ${(["403", "402"] as const)
-          .map(
-            (c) => `<div class="trend-cell">
-              <p class="trend-title"><code class="code c${c}">${c}</code> rate for agents</p>
-              <ul class="legend" aria-hidden="true">
-                <li><span class="swatch" style="background:var(--c${c})"></span>${esc(i.name)}</li>
-                <li><span class="swatch" style="background:var(--cmp)"></span>All industries</li>
-              </ul>
-              <div class="trend-host" data-name="${esc(i.name)}" data-code="${c}"></div>
-            </div>`,
-          )
-          .join("")}
-      </div>
     </div>`;
   }
 
-  function mountTrend(host: HTMLElement) {
-    const ind = d.industries.find((x) => x.name === host.dataset.name);
-    const c = host.dataset.code as CodeSel;
+  function mountTrend(el: HTMLElement) {
+    const ind = d.industries.find((x) => x.name === el.dataset.name);
+    const c = el.dataset.code as Code;
     if (!ind?.monthly) return;
-    const series = ind.monthly.filter((m) => allAgents.has(m.month));
-    const months = series.map((m) => m.month);
-    const mine = series.map((m) => m[c]);
-    const all = months.map((m) => allAgents.get(m)![c]);
+    const pts = ind.monthly.filter((x) => months.includes(x.month));
+    const ms = pts.map((x) => x.month);
+    const mine = pts.map((x) => x[c]);
+    const all = ms.map((m) => d.monthly.find((x) => x.month === m)!.agents[c]);
     const { yMax, yTicks } = niceScale(Math.max(...mine, ...all));
-    lineChart(host, {
-      months,
+    lineChart(el, {
+      months: ms,
       yMax,
       yTicks,
       compact: true,
       series: [
-        { label: ind.name.length > 14 ? "Industry" : ind.name, values: mine, color: `var(--c${c})` },
-        { label: "All", values: all, color: "var(--cmp)" },
+        { label: ind.name.length > 14 ? "Industry" : ind.name, values: mine, color: c === "403" ? "var(--red)" : "var(--blue)" },
+        { label: "All", values: all, color: "#9A9A9A" },
       ],
-      ariaLabel: `${ind.name}: agent ${c} rate by month, ${pct(mine[0])} in ${monthLabel(months[0])} to ${pct(mine[mine.length - 1])} in ${monthLabel(months[months.length - 1])}. All industries: ${pct(all[0])} to ${pct(all[all.length - 1])}.`,
+      ariaLabel: `${ind.name}: agent ${c} rate by month, ${pct(mine[0])} in ${monthLabel(ms[0])} to ${pct(mine[mine.length - 1])} in ${monthLabel(ms[ms.length - 1])}.`,
     });
   }
 
   render();
+  return { update: render };
 }

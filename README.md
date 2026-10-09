@@ -26,6 +26,33 @@ archived in `data/pulls/`. Pushing code redeploys with the committed dataset and
 Radar. If Radar returns incomplete core data the run fails, nothing is deployed,
 and GitHub emails the repo admins; the site keeps its previous version.
 
+## How the numbers are checked
+
+Every run of the workflow checks the data before anything is published:
+
+1. **Recompute.** `scripts/verify_dataset.py` re-derives every published figure from the raw
+   Radar pull with its own code (not the build's) and fails the run on any mismatch.
+2. **Cross-check.** Radar answers separate questions that must agree: an industry's 403 rate,
+   its share of all agent 403s, and its share of agent traffic. The check confirms
+   `rate = share of 403s x 403 rate of the covered sites / traffic share` for every industry,
+   for agents, and month by month. It also measures the 403 and 402 rates across sites that
+   have an industry, which differ from all agent traffic (2026 to date: 19.2% vs 25.5% for 403).
+3. **Sanity.** Totals near 100%, rates within 0 to 100, complete and contiguous months, no
+   failed requests.
+4. **Live re-measure.** `scripts/live_check.py` rebuilds the headline 403 and 402 rates from
+   three different Radar queries (crawl-purpose mix, status mix, crawl-purpose mix of 403s)
+   and reports the gap.
+
+Results are written to `public/data/verification.json` and summarised on the Method tab.
+
+## Industry labels
+
+Cloudflare publishes no definitions for its industry labels. `data/industry_labels.json` holds
+a one-line description for each, shown behind the info icon. Labels that match LinkedIn's
+industry list use LinkedIn's definition; the rest are marked as our reading.
+
+To run a full refresh from a code push, put `[pull]` in the commit message.
+
 ## Run it locally
 
 ```sh

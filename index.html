@@ -3,84 +3,45 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Agent Access Index</title>
-    <meta name="description" content="How often websites refuse AI agents (403) or ask them to pay (402), by month and industry, from Cloudflare Radar data." />
+    <title>WhatsThe402</title>
+    <meta name="description" content="How often websites refuse AI agents (403) or ask them to pay (402), month by month and by industry, from Cloudflare Radar data." />
+    <meta name="theme-color" content="#FFFFFF" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Work+Sans:wght@400;500;600&display=swap" />
   </head>
   <body>
-    <a class="skip" href="#trend">Skip to data</a>
+    <a class="skip" href="#main">Skip to content</a>
     <header class="top">
-      <div class="wrap top-inner">
-        <a class="brand" href="#top">Agent Access Index</a>
-        <nav aria-label="Sections">
-          <a href="#trend">Trend</a>
-          <a href="#industries">Industries</a>
-          <a href="#agents">Agents</a>
-          <a href="#method">Method</a>
-        </nav>
-      </div>
+      <a class="brand" href="#" data-view="overview">WhatsThe402</a>
+      <label class="month" for="month">
+        <span id="month-label"></span>
+        <input id="month" type="range" min="0" max="0" step="1" value="0" />
+      </label>
+      <nav class="tabs" aria-label="Sections">
+        <a href="#" data-view="overview">Overview</a>
+        <a href="#industries" data-view="industries">Industries</a>
+        <a href="#agents" data-view="agents">Agents</a>
+        <a href="#method" data-view="method">Method</a>
+      </nav>
     </header>
 
-    <main id="top" class="wrap">
-      <section class="intro">
-        <h1>How the web answers AI agents</h1>
-        <p class="lede">When an AI agent fetches a page for a person, the site answers in one of three ways:</p>
-        <ul class="answers">
-          <li><code class="code c200">200</code><span><b>Serve it.</b> The agent gets the page.</span></li>
-          <li><code class="code c403">403</code><span><b>Refuse it.</b> Forbidden: the site blocks the agent.</span></li>
-          <li><code class="code c402">402</code><span><b>Ask for payment.</b> Payment Required: the page has a price.</span></li>
-        </ul>
-        <p class="lede-after">This index tracks refusals and payment requests across Cloudflare's network, month by month and industry by industry.</p>
-        <p class="source-line" id="source-line"></p>
-      </section>
-
-      <section id="trend" class="block" aria-labelledby="trend-h">
-        <h2 id="trend-h" class="visually-hidden">Monthly trend</h2>
-        <div class="panels">
-          <article class="panel" id="panel-403"></article>
-          <article class="panel" id="panel-402"></article>
-        </div>
-        <div class="mix-block" id="mix-block"></div>
-      </section>
-
-      <section id="industries" class="block" aria-labelledby="ind-h">
-        <div class="block-head">
-          <h2 id="ind-h">Industries</h2>
-          <p class="block-lede">
-            Two measures answer two different questions. <strong>Rate</strong> is how often an industry
-            refuses or charges the agents that visit it. <strong>Share of total</strong> is where all those
-            responses come from. A small industry can have a high rate and still a small share.
-          </p>
-        </div>
-        <div id="industry-explorer"></div>
-      </section>
-
-      <section id="agents" class="block" aria-labelledby="agents-h">
-        <div class="block-head">
-          <h2 id="agents-h">Agents</h2>
-          <p class="block-lede" id="agents-lede"></p>
-        </div>
-        <div id="agents-body"></div>
-      </section>
-
-      <section id="method" class="block" aria-labelledby="method-h">
-        <div class="block-head">
-          <h2 id="method-h">Method and sources</h2>
-        </div>
-        <div id="method-body"></div>
-      </section>
+    <main id="main">
+      <div id="view-overview" class="view"></div>
+      <div id="view-industries" class="view" hidden></div>
+      <div id="view-agents" class="view" hidden></div>
+      <div id="view-method" class="view" hidden></div>
     </main>
 
     <footer class="foot">
-      <div class="wrap foot-inner">
-        <p>Built by 4Mica from public Cloudflare Radar data. Not affiliated with Cloudflare.</p>
-        <p><a href="data/index.json">Download the dataset (JSON)</a></p>
-      </div>
+      <span id="foot-source"></span>
+      <span class="foot-actions">
+        <button type="button" class="link-btn" id="dl-csv">Download CSV</button>
+        <button type="button" class="btn" id="cite">Copy citation</button>
+      </span>
     </footer>
 
-    <p class="load-error wrap" id="load-error" hidden></p>
+    <p class="load-error" id="load-error" hidden></p>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

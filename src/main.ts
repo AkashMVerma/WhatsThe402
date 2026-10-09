@@ -1,231 +1,294 @@
 import "./styles.css";
-import { bindMixFigures, lineChart, mixFigure } from "./charts";
-import { dateLabel, esc, monthLabel, pct, ratio } from "./format";
+import { dateLabel, esc, monthLabel, pct } from "./format";
 import { initIndustries } from "./industries";
-import type { Dataset } from "./types";
+import type { Dataset, Verification } from "./types";
 
-async function load(): Promise<Dataset> {
+type View = "overview" | "industries" | "agents" | "method";
+const VIEWS: View[] = ["overview", "industries", "agents", "method"];
+const LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+export function monthLong(ym: string): string {
+  const [y, m] = ym.split("-");
+  return `${LONG[+m - 1]} ${y}`;
+}
+
+function mix(a: string, b: string, t: number): string {
+  const h = (s: string, i: number) => parseInt(s.slice(i, i + 2), 16);
+  return "#" + [1, 3, 5].map((i) => Math.round(h(a, i) + (h(b, i) - h(a, i)) * t).toString(16).padStart(2, "0")).join("");
+}
+
+const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+
+async function load(): Promise<{ d: Dataset; v: Verification | null }> {
   const res = await fetch("data/index.json", { cache: "no-cache" });
   if (!res.ok) throw new Error(`data/index.json returned ${res.status}`);
-  return res.json();
-}
-
-function sourceLine(d: Dataset) {
-  const { monthly, ytd } = d.meta.windows;
-  document.getElementById("source-line")!.innerHTML =
-    `Source: <a href="${d.meta.sourceUrl}" rel="noopener">Cloudflare Radar</a>, AI Bots &amp; Crawlers. ` +
-    `Monthly data ${monthLabel(monthly.start)} to ${monthLabel(monthly.end)}; industry and agent data ${esc(ytd.label)}. ` +
-    `All figures are shares of requests, not counts. Updated ${dateLabel(d.meta.updated)}.`;
-}
-
-/** Compare the latest month with the same month a year earlier, in the right direction. */
-function yearOnYear(now: number, then: number | null, thenMonth: string | null): string {
-  if (then == null || thenMonth == null) return "";
-  const when = monthLabel(thenMonth);
-  if (then === 0) return now > 0 ? `Up from 0% in ${when}.` : `Unchanged from ${when}.`;
-  const mult = now / then;
-  if (mult >= 3) return `${ratio(mult)} the ${when} rate of ${pct(then)}.`;
-  if (mult <= 1 / 3) return `Down from ${pct(then)} in ${when}, a ${ratio(1 / mult)} fall.`;
-  if (pct(now) === pct(then)) return `Unchanged from ${when}.`;
-  return `${now > then ? "Up" : "Down"} from ${pct(then)} in ${when}.`;
-}
-
-/** If the latest month sits well below the past year's peak, say where the peak was. */
-function peakNote(values: number[], months: string[]): string {
-  const last = values.length - 1;
-  const from = Math.max(0, last - 12);
-  let peak = from;
-  for (let i = from; i < last; i++) if (values[i] > values[peak]) peak = i;
-  if (peak === last || values[last] >= values[peak] * 0.6) return "";
-  return `Peak: ${pct(values[peak])} in ${monthLabel(months[peak])}.`;
-}
-
-function trendPanel(d: Dataset, code: "403" | "402") {
-  const el = document.getElementById(`panel-${code}`)!;
-  const months = d.monthly.map((m) => m.month);
-  const agents = d.monthly.map((m) => m.agents[code]);
-  const all = d.monthly.map((m) => m.allBots[code]);
-  const last = d.monthly.length - 1;
-  const lastMonth = d.monthly[last].month;
-  const yearAgoIdx = months.indexOf(`${Number(lastMonth.slice(0, 4)) - 1}${lastMonth.slice(4)}`);
-  const now = agents[last];
-  const then = yearAgoIdx >= 0 ? agents[yearAgoIdx] : null;
-
-  const name = code === "403" ? "Forbidden" : "Payment Required";
-  const verb = code === "403" ? "refused" : "asked to pay";
-  const change = [yearOnYear(now, then, yearAgoIdx >= 0 ? months[yearAgoIdx] : null), peakNote(agents, months)].join(" ").trim();
-
-  el.innerHTML = `
-    <header class="panel-head">
-      <h3 class="status"><code class="code c${code}">${code}</code> ${name}</h3>
-      <p class="figure"><span class="figure-num">${pct(now)}</span> of agent requests ${verb} in ${monthLabel(lastMonth)}</p>
-      <p class="figure-sub">${change} All AI bots: ${pct(all[last])}.</p>
-    </header>
-    <ul class="legend" aria-hidden="true">
-      <li><span class="swatch" style="background:var(--c${code})"></span>Agents</li>
-      <li><span class="swatch" style="background:var(--cmp)"></span>All AI bots</li>
-    </ul>
-    <div class="chart-host"></div>`;
-
-  // Annotate the single largest month-on-month jump in the agent series when it is a step change.
-  let annotation: { index: number; text: string } | undefined;
-  let bestI = -1;
-  let best = 0;
-  for (let i = 1; i < agents.length; i++) {
-    const r = agents[i - 1] > 0 ? agents[i] / agents[i - 1] : 0;
-    if (r > best) {
-      best = r;
-      bestI = i;
-    }
+  const d = (await res.json()) as Dataset;
+  let v: Verification | null = null;
+  try {
+    const r = await fetch("data/verification.json", { cache: "no-cache" });
+    if (r.ok) v = await r.json();
+  } catch {
+    v = null;
   }
-  if (best >= 5) annotation = { index: bestI, text: `${monthLabel(months[bestI], true)}: ${Math.round(best)}× in a month` };
+  return { d, v };
+}
 
-  const yMax = code === "403" ? 30 : 1.6;
-  const yTicks = code === "403" ? [0, 10, 20, 30] : [0, 0.4, 0.8, 1.2, 1.6];
-  lineChart(el.querySelector(".chart-host")!, {
-    months,
-    yMax: Math.max(yMax, Math.max(...agents, ...all) * 1.05),
-    yTicks,
-    annotation,
-    series: [
-      { label: "Agents", values: agents, color: `var(--c${code})` },
-      { label: "All AI bots", values: all, color: "var(--cmp)" },
-    ],
-    ariaLabel: `${code} ${name}: share of agent requests by month, ${monthLabel(months[0])} to ${monthLabel(lastMonth)}. Agents ${pct(agents[0])} to ${pct(now)}; all AI bots ${pct(all[0])} to ${pct(all[last])}.`,
+function main(d: Dataset, v: Verification | null) {
+  const months = d.monthly.map((m) => m.month);
+  const a403 = d.monthly.map((m) => m.agents["403"]);
+  const a402 = d.monthly.map((m) => m.agents["402"]);
+  const lo403 = Math.min(...a403);
+  const hi403 = Math.max(...a403);
+  const hi402 = Math.max(...a402);
+  const t3 = (x: number) => Math.max(0, Math.min(1, (x - lo403) / (hi403 - lo403 || 1)));
+  const t2 = (x: number) => Math.max(0, Math.min(1, x / (hi402 || 1)));
+  const red = (x: number) => mix("#FFF4F2", "#FF3B2F", t3(x));
+  const blue = (x: number) => mix("#EEF3FF", "#1E40FF", t2(x));
+  const peak = (vals: number[]) => vals.indexOf(Math.max(...vals));
+
+  const params = new URLSearchParams(location.search);
+  const fromUrl = months.indexOf(params.get("m") ?? "");
+  const state = { idx: fromUrl >= 0 ? fromUrl : months.length - 1, view: "overview" as View };
+
+  // ---- Overview markup (built once, updated on month change) ----
+  const ov = $("view-overview");
+  ov.innerHTML = `
+    <section class="field" id="f403">
+      <div>
+        <p class="field-code">403 Forbidden</p>
+        <p class="field-num" id="n403"></p>
+        <p class="field-text">of AI agent requests were refused in <span data-month></span>.</p>
+      </div>
+      <div class="field-side">
+        <span class="cap">403 rate by month. Highest ${pct(a403[peak(a403)])} in ${monthLabel(months[peak(a403)])}.</span>
+        <div class="cells" id="cells403"></div>
+        <div class="cell-axis"><span>${monthLabel(months[0])}</span><span>${monthLabel(months[months.length - 1])}</span></div>
+      </div>
+    </section>
+    <section class="field" id="f402">
+      <div>
+        <p class="field-code">402 Payment Required</p>
+        <p class="field-num" id="n402"></p>
+        <p class="field-text">of AI agent requests were asked to pay in <span data-month></span>.</p>
+      </div>
+      <div class="field-side">
+        <span class="cap">402 rate by month. Highest ${pct(a402[peak(a402)])} in ${monthLabel(months[peak(a402)])}.</span>
+        <div class="cells" id="cells402"></div>
+        <div class="cell-axis"><span>${monthLabel(months[0])}</span><span>${monthLabel(months[months.length - 1])}</span></div>
+      </div>
+    </section>
+    <section class="thousand">
+      <div>
+        <h2>Out of every 1,000 agent requests in <span data-month></span></h2>
+        <p class="count"><span class="swatch" style="background:var(--red)"></span><b id="c403"></b> were refused</p>
+        <p class="count"><span class="swatch" style="background:var(--blue)"></span><b id="c402"></b> were asked to pay</p>
+        <p class="count"><span class="swatch" style="background:var(--other)"></span><b id="cRest"></b> got any other answer</p>
+      </div>
+      <div class="dots" id="dots" role="img"></div>
+    </section>`;
+
+  const cells403 = $("cells403");
+  const cells402 = $("cells402");
+  months.forEach((m, k) => {
+    for (const [host, code, vals, color] of [[cells403, "403", a403, red], [cells402, "402", a402, blue]] as const) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "cell";
+      b.style.background = color(vals[k]);
+      b.setAttribute("aria-label", `${monthLabel(m)}: ${code} rate ${pct(vals[k])}`);
+      b.title = `${monthLabel(m)}: ${pct(vals[k])}`;
+      b.addEventListener("click", () => setMonth(k));
+      host.appendChild(b);
+    }
   });
+  const dots = $("dots");
+  const dotEls: HTMLSpanElement[] = [];
+  for (let k = 0; k < 1000; k++) {
+    const s = document.createElement("span");
+    dots.appendChild(s);
+    dotEls.push(s);
+  }
+
+  // ---- Static views ----
+  renderAgents(d);
+  renderMethod(d, v);
+  const industries = initIndustries($("view-industries"), d, () => state.idx);
+
+  // ---- Month control ----
+  const slider = $<HTMLInputElement>("month");
+  slider.max = String(months.length - 1);
+  slider.addEventListener("input", () => setMonth(+slider.value));
+
+  function setMonth(k: number) {
+    state.idx = k;
+    const m = months[k];
+    slider.value = String(k);
+    $("month-label").textContent = monthLong(m);
+    document.querySelectorAll("[data-month]").forEach((el) => (el.textContent = monthLong(m)));
+
+    const f3 = $("f403");
+    const f2 = $("f402");
+    f3.style.background = red(a403[k]);
+    f3.style.color = "#111111";
+    f2.style.background = blue(a402[k]);
+    f2.style.color = t2(a402[k]) > 0.5 ? "#FFFFFF" : "#111111";
+    $("n403").textContent = pct(a403[k]);
+    $("n402").textContent = pct(a402[k]);
+    cells403.querySelectorAll("button").forEach((b, i) => b.setAttribute("aria-pressed", String(i === k)));
+    cells402.querySelectorAll("button").forEach((b, i) => b.setAttribute("aria-pressed", String(i === k)));
+
+    const n3 = Math.round(a403[k] * 10);
+    const n2 = Math.round(a402[k] * 10);
+    $("c403").textContent = String(n3);
+    $("c402").textContent = n2 === 0 && a402[k] > 0 ? "<1" : String(n2);
+    $("cRest").textContent = String(1000 - n3 - n2);
+    dotEls.forEach((s, i) => (s.className = i < n3 ? "r" : i < n3 + n2 ? "b" : ""));
+    dots.setAttribute("aria-label", `Of 1,000 agent requests in ${monthLong(m)}, ${n3} refused and ${n2} asked to pay`);
+
+    industries.update();
+    const url = new URL(location.href);
+    if (k === months.length - 1) url.searchParams.delete("m");
+    else url.searchParams.set("m", m);
+    history.replaceState(null, "", url);
+  }
+
+  // ---- Views ----
+  function showView(view: View) {
+    state.view = view;
+    VIEWS.forEach((x) => ($(`view-${x}`).hidden = x !== view));
+    document.querySelectorAll<HTMLAnchorElement>(".tabs a").forEach((a) => {
+      if (a.dataset.view === view) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+  }
+  const fromHash = () => {
+    const h = location.hash.replace("#", "") as View;
+    showView(VIEWS.includes(h) ? h : "overview");
+  };
+  window.addEventListener("hashchange", fromHash);
+  document.querySelectorAll<HTMLAnchorElement>("[data-view]").forEach((a) =>
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      const view = a.dataset.view as View;
+      const url = new URL(location.href);
+      url.hash = view === "overview" ? "" : view;
+      history.pushState(null, "", url);
+      showView(view);
+      window.scrollTo({ top: 0 });
+    }),
+  );
+
+  // ---- Footer ----
+  $("foot-source").innerHTML =
+    `Source: <a href="${d.meta.sourceUrl}" rel="noopener">Cloudflare Radar</a>, AI Bots &amp; Crawlers. ` +
+    `Shares of requests, not counts. Updated ${dateLabel(d.meta.updated)}.`;
+  $("cite").addEventListener("click", async () => {
+    const m = months[state.idx];
+    const url = new URL(location.href);
+    url.hash = "";
+    url.searchParams.set("m", m);
+    const text = `WhatsThe402, Agent Access Index, ${monthLong(m)}. Data from Cloudflare Radar. Accessed ${dateLabel(new Date().toISOString().slice(0, 10))}. ${url.toString()}`;
+    const btn = $("cite");
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.textContent = "Citation copied";
+    } catch {
+      window.prompt("Copy this citation", text);
+    }
+    setTimeout(() => (btn.textContent = "Copy citation"), 2400);
+  });
+  $("dl-csv").addEventListener("click", () => {
+    const rows = [["month", "agents_403_pct", "agents_402_pct", "all_ai_bots_403_pct", "all_ai_bots_402_pct"]];
+    d.monthly.forEach((m) => rows.push([m.month, String(m.agents["403"]), String(m.agents["402"]), String(m.allBots["403"]), String(m.allBots["402"])]));
+    rows.push([]);
+    rows.push(["industry", "agent_traffic_share_pct", "agents_403_pct_ytd", "agents_402_pct_ytd", "share_of_agent_403s_pct", "share_of_agent_402s_pct"]);
+    d.industries.forEach((i) =>
+      rows.push([i.name, String(i.agentTrafficShare ?? ""), String(i.agents["403"]), String(i.agents["402"]), String(i.shareOfAgent403), String(i.shareOfAgent402)]),
+    );
+    const csv = rows.map((r) => r.map((c) => (/[",\n]/.test(c) ? `"${c.replace(/"/g, '""')}"` : c)).join(",")).join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    a.download = `whatsthe402-${d.meta.updated}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  fromHash();
+  setMonth(state.idx);
 }
 
-function mixBlock(d: Dataset) {
-  const a = d.overall.agents["403"];
-  const t = d.overall.trainers["403"];
-  const times = a / t;
-  const headline =
-    times >= 1.8 && times < 2.05
-      ? "Agents are refused about twice as often as training crawlers"
-      : `Agents are refused ${ratio(times)} as often as training crawlers`;
-  document.getElementById("mix-block")!.innerHTML = `
-    <div class="mix-head">
-      <h3>${headline}</h3>
-      <p class="muted">Where requests ended up, ${esc(d.meta.windows.ytd.label)}. ${pct(a)} of agent requests got a 403, against ${pct(t)} for training crawlers.</p>
-    </div>
-    ${mixFigure([
-      { label: "Agents", groups: d.overall.agentGroups },
-      { label: "Training crawlers", groups: d.overall.trainerGroups },
-    ])}`;
-  bindMixFigures(document.getElementById("mix-block")!);
-}
-
-function agentsSection(d: Dataset) {
-  const top402 = [...d.bots].filter((b) => b.shareOfAgent402 != null).sort((a, b) => b.shareOfAgent402! - a.shareOfAgent402!)[0];
-  document.getElementById("agents-lede")!.textContent =
-    `Which assistants get refused, and which get asked to pay. ${d.meta.windows.ytd.label}.`;
-
+function renderAgents(d: Dataset) {
+  const top = [...d.bots].filter((b) => b.shareOfAgent402 != null).sort((a, b) => b.shareOfAgent402! - a.shareOfAgent402!)[0];
   const rows = d.bots
-    .map((b) => {
-      const r = b.rates;
-      return `<tr>
-        <th scope="row">${esc(b.name)}</th>
-        <td>${pct(b.trafficShare)}</td>
-        <td>${r?.["403"] != null ? `<span class="cell-bar"><span class="cell-fill f403" style="width:${r["403"]}%"></span></span>` : ""}${pct(r?.["403"])}</td>
-        <td>${pct(r?.["402"])}</td>
-        <td>${pct(b.shareOfAgent402)}</td>
-      </tr>`;
-    })
-    .join("");
-
-  const v = d.verticals402.slice(0, 8);
-  const vMax = Math.max(...v.map((x) => x.shareOfAgent402));
-  const vRows = v
     .map(
-      (x) => `<li><span class="bl-name">${esc(x.name)}</span><span class="bl-track"><span class="bl-fill" style="width:${(x.shareOfAgent402 / vMax) * 100}%"></span></span><span class="bl-val">${pct(x.shareOfAgent402)}</span></li>`,
+      (b) => `<div class="atr">
+        <span style="font-weight:500">${esc(b.name)}</span>
+        <span class="num">${pct(b.trafficShare)}</span>
+        <span class="num" style="color:var(--red);font-weight:600">${pct(b.rates?.["403"])}</span>
+        <span class="num" style="color:var(--blue);font-weight:600">${pct(b.rates?.["402"])}</span>
+        <span class="num">${pct(b.shareOfAgent402)}</span>
+      </div>`,
     )
     .join("");
-  const top2 = d.verticals402[0].shareOfAgent402 + d.verticals402[1].shareOfAgent402;
-  const gaming = d.industries.find((i) => i.name === "Gaming");
-
-  document.getElementById("agents-body")!.innerHTML = `
-    <div class="table-scroll">
-      <table class="data">
-        <thead><tr>
-          <th scope="col">Agent</th>
-          <th scope="col">Share of agent traffic</th>
-          <th scope="col"><code class="code c403">403</code> rate</th>
-          <th scope="col"><code class="code c402">402</code> rate</th>
-          <th scope="col">Share of all agent 402s</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-    <p class="table-note">Rates are the share of that agent's own requests. Cloudflare does not publish response rates for TikTokSpider, Google-NotebookLM or Meta-ExternalFetcher in this view.</p>
-
-    <div class="two-col">
-      <div>
-        <h3>Where agent 402s land, by vertical</h3>
-        <p class="muted">Share of all agent 402 responses, ${esc(d.meta.windows.ytd.label)}.</p>
-        <ul class="barlist">${vRows}</ul>
-      </div>
-      <div>
-        <h3>Read the 402 numbers with care</h3>
-        <ul class="caveats">
-          <li>${esc(top402.name)} receives ${pct(top402.shareOfAgent402)} of all agent 402s, so the 402 trend mostly reflects how sites respond to that one agent.</li>
-          <li>Two verticals, ${esc(d.verticals402[0].name)} and ${esc(d.verticals402[1].name)}, account for ${pct(top2)} of agent 402s.</li>
-          ${gaming?.note ? `<li>Gaming: ${esc(gaming.note)}</li>` : ""}
-          <li>402 is still rare. Across all agent traffic it was ${pct(d.overall.agents["402"])} of responses this year, against ${pct(d.overall.agents["403"])} for 403.</li>
-        </ul>
-      </div>
-    </div>`;
+  $("view-agents").innerHTML = `<div class="page">
+    <h1>Agents, ${esc(d.meta.windows.ytd.label)}</h1>
+    <p class="sub">Each rate is the share of that agent's own requests.</p>
+    <div class="scroll"><div class="atbl">
+      <div class="atr head"><span>Agent</span><span class="num">Share of agent traffic</span><span class="num">403 rate</span><span class="num">402 rate</span><span class="num">Share of all agent 402s</span></div>
+      ${rows}
+    </div></div>
+    <ul class="facts-list">
+      ${top ? `<li>${esc(top.name)} receives ${pct(top.shareOfAgent402)} of all agent 402s, so the 402 trend mostly reflects how sites treat that one agent.</li>` : ""}
+      <li>Across all agents, ${pct(d.overall.agents["403"])} of requests got a 403 this year, against ${pct(d.overall.trainers["403"])} of requests from training crawlers.</li>
+    </ul>
+  </div>`;
 }
 
-function methodSection(d: Dataset) {
+function renderMethod(d: Dataset, v: Verification | null) {
   const m = d.meta;
+  const sites = d.overall.industrySites;
+  const cc = v?.crossChecks ?? {};
+  const live = v?.liveCheck?.results ?? [];
+  const checks = v
+    ? `<h2>Checks on this data</h2>
+      <div class="checks">
+        <div class="check-card"><b>${v.recompute.mismatches === 0 ? "0" : v.recompute.mismatches} mismatches</b><span>${v.recompute.checked.toLocaleString("en")} published figures recomputed from the raw Radar responses.</span></div>
+        <div class="check-card"><b>${v.sanity.failures} failures</b><span>${v.sanity.checked} sanity checks: totals near 100%, complete and contiguous months, no failed requests.</span></div>
+        ${cc.industries_403_snapshot?.n ? `<div class="check-card"><b>${cc.industries_403_snapshot.medianAbsDiffPP} pts</b><span>Median gap between each industry's 403 rate and the rate implied by Radar's separate traffic and 403 breakdowns.</span></div>` : ""}
+        ${live.length ? `<div class="check-card"><b>${Math.max(...live.map((r) => Math.abs(r.diffPP ?? 0))).toFixed(2)} pts</b><span>Largest gap when the headline rates are re-measured from Radar by a different route, ${dateLabel(v.liveCheck!.checkedAt.slice(0, 10))}.</span></div>` : ""}
+      </div>
+      <p class="small">Full results: <a href="data/verification.json">verification.json</a>, checked ${dateLabel(v.verifiedAt.slice(0, 10))} against ${esc(v.pull)}.</p>`
+    : "";
   const gaps: string[] = [];
   if (m.monthsPending.length) gaps.push(`${m.monthsPending.map((x) => monthLabel(x)).join(", ")} could not be pulled and is not shown.`);
-  if (d.industries.some((i) => !i.trainers))
-    gaps.push("Training-crawler rates are missing for some industries whose names contain commas or whose training traffic is too small to report.");
-  const withTrends = d.industries.filter((i) => i.monthly?.length).length;
-  if (withTrends) gaps.push(`Monthly industry trends cover the ${withTrends} industries with the most agent traffic.`);
-  if (m.failedRequests) gaps.push(`${m.failedRequests} Radar requests failed in the latest pull; affected figures are left out rather than estimated.`);
-  gaps.push("Radar can revise recent data. Two pulls of the same month a week apart have differed by up to 0.2 percentage points.");
-
-  const notes = m.radarNotes.length
-    ? `<h3>Cloudflare's data notes for this period</h3><ul class="radar-notes">${m.radarNotes
-        .map((n) => `<li>${esc(n.description)}${n.start ? ` (${dateLabel(n.start)}${n.end && n.end !== n.start ? ` to ${dateLabel(n.end)}` : ""})` : ""}</li>`)
-        .join("")}</ul>`
-    : "";
-
-  document.getElementById("method-body")!.innerHTML = `
+  gaps.push("Training-crawler rates are missing for a few industries whose training traffic Radar does not report.");
+  gaps.push("Monthly figures by industry cover the 30 industries with the most agent traffic.");
+  gaps.push("Radar can revise recent months. We re-pull every month each day, so revisions show up within a day.");
+  $("view-method").innerHTML = `<div class="page">
+    <h1>Method</h1>
     <dl class="defs">
-      <dt>Agents</dt><dd>${esc(m.definitions.agents)}</dd>
-      <dt>Training crawlers</dt><dd>${esc(m.definitions.trainers)}</dd>
-      <dt>All AI bots</dt><dd>${esc(m.definitions.allBots)}</dd>
-      <dt>Rate</dt><dd>Of the agent requests to an industry, the percent answered with a given code.</dd>
-      <dt>Share of total</dt><dd>Of all agent responses with a given code, the percent that came from an industry. Compared against the industry's share of agent traffic: a share above its traffic share means the industry refuses or charges more than its size suggests.</dd>
-      <dt>Low-volume industries</dt><dd>Industries with under ${m.lowVolumeThresholdPct}% of agent traffic are hidden by default. A few sites can swing their rates.</dd>
-      <dt>Industry labels</dt><dd>Cloudflare's own taxonomy, kept as published, including its duplicates (for example "software" and "Computer Software").</dd>
-      <dt>Updates</dt><dd>Refreshed daily from the Radar API. Monthly figures appear once a month is complete. Last updated ${dateLabel(m.updated)}.</dd>
+      <dt>Agents</dt><dd>Bots that fetch a page because a person asked, such as ChatGPT-User and Claude-User. Cloudflare calls this crawl purpose User Action.</dd>
+      <dt>403 rate</dt><dd>Of the agent requests in a month or industry, the share answered with 403 Forbidden.</dd>
+      <dt>402 rate</dt><dd>The same for 402 Payment Required.</dd>
+      <dt>Out of 1,000</dt><dd>The month's 403 and 402 rates times 1,000, rounded. Fewer than one in 1,000 shows as &lt;1.</dd>
+      <dt>Industries</dt><dd>Cloudflare assigns sites to industries by the business that owns them. Radar's industry figures cover only sites that have an industry${sites?.["403"] != null ? `: across those sites, ${pct(sites["403"])} of agent requests got a 403 this year, against ${pct(d.overall.agents["403"])} across all agent traffic` : ""}. Most labels match LinkedIn's industry list; the info icon says what each covers.</dd>
+      <dt>Traffic share</dt><dd>An industry's share of agent requests to sites that have an industry.</dd>
+      <dt>Small industries</dt><dd>Industries with under ${m.lowVolumeThresholdPct}% of agent traffic are hidden by default. A few sites can swing their rates.</dd>
+      <dt>Updates</dt><dd>Pulled daily from the Cloudflare Radar API. A month appears once it is complete. Last updated ${dateLabel(m.updated)}.</dd>
     </dl>
-    <h3>Sources</h3>
-    <ul class="sources">${m.sources.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
-    ${notes}
-    <h3>Known gaps</h3>
-    <ul class="sources">${gaps.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`;
+    ${checks}
+    <h2>Sources</h2>
+    <ul class="facts-list">${m.sources.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
+    ${m.radarNotes.length ? `<h2>Cloudflare's notes on this period</h2><ul class="facts-list">${m.radarNotes.map((n) => `<li>${esc(n.description)}${n.start ? ` (${dateLabel(n.start)}${n.end && n.end !== n.start ? ` to ${dateLabel(n.end)}` : ""})` : ""}</li>`).join("")}</ul>` : ""}
+    <h2>Known gaps</h2>
+    <ul class="facts-list">${gaps.map((g) => `<li>${esc(g)}</li>`).join("")}</ul>
+  </div>`;
 }
 
-async function main() {
-  try {
-    const d = await load();
-    sourceLine(d);
-    trendPanel(d, "403");
-    trendPanel(d, "402");
-    mixBlock(d);
-    initIndustries(document.getElementById("industry-explorer")!, d);
-    agentsSection(d);
-    methodSection(d);
-  } catch (err) {
-    const el = document.getElementById("load-error")!;
-    el.textContent = `The data file could not be loaded (${(err as Error).message}). Reload the page; if it persists, data/index.json is missing from the deployment.`;
+load()
+  .then(({ d, v }) => main(d, v))
+  .catch((err) => {
+    const el = $("load-error");
+    el.textContent = `The data file could not be loaded (${(err as Error).message}). Reload the page to try again.`;
     el.hidden = false;
-  }
-}
-
-main();
+  });

@@ -16,12 +16,14 @@ import datetime as dt
 import gzip
 import json
 import pathlib
+import statistics
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RAW = ROOT / "data" / "raw"
 PULLS = ROOT / "data" / "pulls"
 OUT = ROOT / "public" / "data" / "index.json"
+LABELS = ROOT / "data" / "industry_labels.json"
 
 # Industries below this share of agent traffic are hidden by default in the UI:
 # a handful of sites can swing their rates.
@@ -195,6 +197,36 @@ def shift_note(series):
 
 # --------------------------------------------------------------------------- build
 
+def industry_sites_rates(p, S, monthly):
+    """Rates for the population the industry breakdowns cover: sites Cloudflare has
+    assigned an industry. Year to date it is the traffic-weighted mean of every
+    industry's own rate. By month we only have rates for the tracked industries, so
+    we scale the all-traffic rate by the median ratio between each tracked
+    industry's direct rate and the rate implied by its shares (an estimate)."""
+    traffic = S.get("industriesAgents") or {}
+    ua_by = S.get("statusAgentsByIndustry") or {}
+    pairs = [(t, ua_by[n]) for n, t in traffic.items() if n != "other" and ua_by.get(n)]
+    tot = sum(t for t, _ in pairs)
+    ytd = {c: (r6(sum(t * d.get(c, 0.0) for t, d in pairs) / tot) if tot else None) for c in ("403", "402")}
+    by_month = {}
+    shares = p.get("monthlyIndustryShares") or {}
+    im = p.get("industryMonthly") or {}
+    for row in monthly:
+        m = row["month"]
+        sh = shares.get(m) or {}
+        est = {}
+        for c in ("403", "402"):
+            ratios = []
+            for n, series in im.items():
+                t = (sh.get("traffic") or {}).get(n)
+                d = (series.get(m) or {}).get(c)
+                if t and t >= 0.5 and d and d > 0.05:
+                    ratios.append(((sh.get(c) or {}).get(n, 0.0) * row["agents"][c] / t) / d)
+            est[c] = r6(row["agents"][c] / statistics.median(ratios)) if len(ratios) >= 5 else None
+        by_month[m] = est
+    return ytd, by_month
+
+
 def build(p, source_file):
     S = p["snapshot"]
     legacy = p.get("_legacy", False)
@@ -213,6 +245,7 @@ def build(p, source_file):
     ua_by = S.get("statusAgentsByIndustry") or {}
     tr_by = S.get("statusTrainingByIndustry") or {}
 
+    labels = json.load(open(LABELS))["labels"] if LABELS.exists() else {}
     industries = []
     for name in sorted(ua_by):
         ua = ua_by[name]
@@ -240,6 +273,12 @@ def build(p, source_file):
             "shareOfAgent429": r6(shares["429"].get(name, 0.0)),
             "monthly": series,
             "note": note,
+            # What the label covers, for the info icon; see data/industry_labels.json.
+            "label": None if name not in labels else {
+                "desc": labels[name][0],
+                "source": labels[name][1],
+                "linkedinName": labels[name][2] if len(labels[name]) > 2 else None,
+            },
         })
 
     bots = []
@@ -265,6 +304,10 @@ def build(p, source_file):
         desc = a.get("description") or a.get("eventType")
         if desc:
             annotations.append({"description": desc, "start": (a.get("startDate") or "")[:10], "end": (a.get("endDate") or "")[:10]})
+
+    sites_ytd, sites_month = industry_sites_rates(p, S, monthly)
+    for row in monthly:
+        row["industrySites"] = sites_month.get(row["month"])
 
     pulled = date_of(p["pulledAt"])
     sources = p.get("_sources") or [
@@ -303,6 +346,8 @@ def build(p, source_file):
             "agentGroups": groups(S["statusAgents"]),
             "trainerGroups": groups(S["statusTraining"]),
             "crawlPurpose": {k: r6(v) for k, v in (S.get("crawlPurpose") or {}).items()},
+            # Rates across sites that have an industry; the benchmark for the industry table.
+            "industrySites": sites_ytd,
         },
         "monthly": monthly,
         "industries": industries,

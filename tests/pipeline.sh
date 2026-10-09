@@ -10,6 +10,8 @@ sleep 1
 RADAR_BASE=http://127.0.0.1:8765 CF_RADAR_TOKEN=test python3 scripts/pull_radar.py --rate 200 --workers 8 --out "$TMP/pulls"
 cp public/data/index.json "$TMP/index.real.json"
 python3 scripts/build_dataset.py "$TMP/pulls"
+cp public/data/index.json "$TMP/index.json"
+python3 scripts/verify_dataset.py "$TMP"/pulls/radar-*.json.gz "$TMP/index.json"
 npx tsc --noEmit
 npx vite build --outDir "$TMP/dist" >/dev/null
 cp "$TMP/index.real.json" public/data/index.json   # restore real data
