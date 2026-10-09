@@ -26,12 +26,13 @@
     <main id="top" class="wrap">
       <section class="intro">
         <h1>How the web answers AI agents</h1>
-        <p class="lede">
-          When an AI agent fetches a page for a person, the site can serve it, refuse it with
-          <code class="code c403">403</code> Forbidden, or ask for payment with
-          <code class="code c402">402</code> Payment Required. This index tracks both responses across
-          Cloudflare's network, month by month and industry by industry.
-        </p>
+        <p class="lede">When an AI agent fetches a page for a person, the site answers in one of three ways:</p>
+        <ul class="answers">
+          <li><code class="code c200">200</code><span><b>Serve it.</b> The agent gets the page.</span></li>
+          <li><code class="code c403">403</code><span><b>Refuse it.</b> Forbidden: the site blocks the agent.</span></li>
+          <li><code class="code c402">402</code><span><b>Ask for payment.</b> Payment Required: the page has a price.</span></li>
+        </ul>
+        <p class="lede-after">This index tracks refusals and payment requests across Cloudflare's network, month by month and industry by industry.</p>
         <p class="source-line" id="source-line"></p>
       </section>
 

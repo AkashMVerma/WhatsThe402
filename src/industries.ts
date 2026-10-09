@@ -1,4 +1,4 @@
-import { lineChart, mixBars, mixLegend, niceScale } from "./charts";
+import { bindMixFigures, lineChart, mixFigure, niceScale } from "./charts";
 import { esc, monthLabel, pct, ratio } from "./format";
 import type { Dataset, Industry } from "./types";
 
@@ -191,6 +191,7 @@ export function initIndustries(host: HTMLElement, d: Dataset) {
     }
 
     body.querySelectorAll<HTMLElement>(".trend-host").forEach(mountTrend);
+    bindMixFigures(body);
 
     body.querySelectorAll<HTMLButtonElement>(".name-btn").forEach((b) =>
       b.addEventListener("click", () => {
@@ -247,9 +248,7 @@ export function initIndustries(host: HTMLElement, d: Dataset) {
         <div><span class="k">Share of all agent <code class="code c403">403</code>s</span><span class="v">${pct(i.shareOfAgent403)}</span></div>
         <div><span class="k">Share of all agent <code class="code c402">402</code>s</span><span class="v">${pct(i.shareOfAgent402)}</span></div>
       </div>
-      ${mixLegend()}
-      <div class="mix-cols" aria-hidden="true"><span></span><span></span><span class="code-head"><span class="c403">403</span><span class="c402">402</span></span></div>
-      ${mixBars(bars)}
+      ${mixFigure(bars)}
       ${i.trainerGroups ? "" : `<p class="muted">Training-crawler data is not available for this industry.</p>`}
       ${trendHtml(i)}
       ${i.note ? `<p class="note">${esc(i.note)}</p>` : ""}

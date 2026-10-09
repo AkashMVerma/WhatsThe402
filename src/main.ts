@@ -1,5 +1,5 @@
 import "./styles.css";
-import { lineChart, mixBars, mixLegend } from "./charts";
+import { bindMixFigures, lineChart, mixFigure } from "./charts";
 import { dateLabel, esc, monthLabel, pct, ratio } from "./format";
 import { initIndustries } from "./industries";
 import type { Dataset } from "./types";
@@ -108,12 +108,11 @@ function mixBlock(d: Dataset) {
       <h3>${headline}</h3>
       <p class="muted">Where requests ended up, ${esc(d.meta.windows.ytd.label)}. ${pct(a)} of agent requests got a 403, against ${pct(t)} for training crawlers.</p>
     </div>
-    ${mixLegend()}
-    <div class="mix-cols" aria-hidden="true"><span></span><span></span><span class="code-head"><span class="c403">403</span><span class="c402">402</span></span></div>
-    ${mixBars([
+    ${mixFigure([
       { label: "Agents", groups: d.overall.agentGroups },
       { label: "Training crawlers", groups: d.overall.trainerGroups },
     ])}`;
+  bindMixFigures(document.getElementById("mix-block")!);
 }
 
 function agentsSection(d: Dataset) {
