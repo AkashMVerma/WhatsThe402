@@ -1,7 +1,7 @@
 {
- "verifiedAt": "2026-10-10T12:53:00Z",
- "pull": "radar-2026-10-10.json.gz",
- "pulledAt": "2026-10-10T12:38:50Z",
+ "verifiedAt": "2026-10-11T13:10:19Z",
+ "pull": "radar-2026-10-11.json.gz",
+ "pulledAt": "2026-10-11T12:58:19Z",
  "recompute": {
   "checked": 3564,
   "mismatches": 0,
@@ -15,89 +15,89 @@
  "crossChecks": {
   "industries_403_snapshot": {
    "n": 72,
-   "medianAbsDiffPP": 0.159,
-   "p90AbsDiffPP": 0.652,
+   "medianAbsDiffPP": 0.161,
+   "p90AbsDiffPP": 0.653,
    "within1pp": 67,
    "largest": [
     {
      "what": "Farming",
-     "direct": 31.94,
-     "implied": 26.13,
-     "diff": -5.81
+     "direct": 32.01,
+     "implied": 25.97,
+     "diff": -6.04
     },
     {
      "what": "Translation and Localization",
-     "direct": 2.327,
+     "direct": 2.345,
      "implied": 0.0,
-     "diff": -2.327
+     "diff": -2.345
     },
     {
      "what": "US Federal Government",
-     "direct": 17.708,
-     "implied": 16.334,
-     "diff": -1.374
+     "direct": 17.741,
+     "implied": 16.369,
+     "diff": -1.372
     },
     {
      "what": "Gambling & Casinos",
-     "direct": 32.909,
-     "implied": 31.684,
-     "diff": -1.225
+     "direct": 32.99,
+     "implied": 31.699,
+     "diff": -1.291
     },
     {
      "what": "Market Research",
      "direct": 70.071,
-     "implied": 71.176,
-     "diff": 1.106
+     "implied": 71.187,
+     "diff": 1.116
     }
    ],
-   "populationFactor": 1.324,
-   "coveredPopulationRate": 19.2435,
-   "overallRate": 25.4775
+   "populationFactor": 1.3236,
+   "coveredPopulationRate": 19.2924,
+   "overallRate": 25.535
   },
   "agents_403_snapshot": {
    "n": 7,
-   "medianAbsDiffPP": 0.665,
-   "p90AbsDiffPP": 1.011,
+   "medianAbsDiffPP": 0.677,
+   "p90AbsDiffPP": 1.151,
    "within1pp": 5,
    "largest": [
     {
      "what": "MistralAI-User",
-     "direct": 42.571,
-     "implied": 39.393,
-     "diff": -3.178
+     "direct": 42.56,
+     "implied": 39.398,
+     "diff": -3.161
     },
     {
      "what": "Perplexity-User",
-     "direct": 46.514,
-     "implied": 45.502,
-     "diff": -1.011
+     "direct": 45.746,
+     "implied": 44.595,
+     "diff": -1.151
     },
     {
      "what": "Claude-User",
-     "direct": 42.982,
-     "implied": 42.252,
-     "diff": -0.73
+     "direct": 42.934,
+     "implied": 42.227,
+     "diff": -0.707
     },
     {
      "what": "TikTokSpider",
-     "direct": 19.962,
-     "implied": 20.627,
-     "diff": 0.665
+     "direct": 20.034,
+     "implied": 20.711,
+     "diff": 0.677
     },
     {
      "what": "Google-NotebookLM",
-     "direct": 2.304,
-     "implied": 2.412,
-     "diff": 0.109
+     "direct": 2.307,
+     "implied": 2.417,
+     "diff": 0.11
     }
    ],
-   "populationFactor": 0.9966,
-   "coveredPopulationRate": 25.5634,
-   "overallRate": 25.4775
+   "populationFactor": 0.9969,
+   "coveredPopulationRate": 25.6147,
+   "overallRate": 25.535
   },
   "industries_403_monthly": {
    "months": 21,
-   "medianAbsDiffPP": 0.089,
+   "medianAbsDiffPP": 0.091,
    "populationFactorByMonth": {
     "2025-01": 1.0168,
     "2025-02": 1.019,
@@ -110,16 +110,16 @@
     "2025-09": 0.9628,
     "2025-10": 0.9764,
     "2025-11": 0.9534,
-    "2025-12": 1.0173,
+    "2025-12": 1.0174,
     "2026-01": 1.0969,
     "2026-02": 1.0563,
-    "2026-03": 1.0193,
+    "2026-03": 1.0192,
     "2026-04": 1.0566,
-    "2026-05": 1.1228,
+    "2026-05": 1.1227,
     "2026-06": 1.165,
-    "2026-07": 1.3029,
-    "2026-08": 1.5679,
-    "2026-09": 1.318
+    "2026-07": 1.3027,
+    "2026-08": 1.5674,
+    "2026-09": 1.3179
    },
    "largest": [
     {
@@ -142,15 +142,15 @@
     },
     {
      "what": "Gambling & Casinos",
-     "direct": 23.747,
-     "implied": 20.719,
-     "diff": -3.028
+     "direct": 23.716,
+     "implied": 20.693,
+     "diff": -3.023
     },
     {
      "what": "Marketing and Advertising",
      "direct": 18.855,
-     "implied": 15.913,
-     "diff": -2.942
+     "implied": 15.915,
+     "diff": -2.939
     }
    ]
   },
@@ -162,38 +162,38 @@
    "largest": [
     {
      "what": "Print & Digital Media",
-     "direct": 20.576,
-     "implied": 20.863,
-     "diff": 0.287
+     "direct": 20.562,
+     "implied": 20.851,
+     "diff": 0.289
     },
     {
      "what": "Gaming",
-     "direct": 13.075,
-     "implied": 13.247,
+     "direct": 13.059,
+     "implied": 13.231,
      "diff": 0.172
     },
     {
      "what": "Marketing and Advertising",
-     "direct": 5.009,
-     "implied": 4.865,
-     "diff": -0.145
+     "direct": 4.975,
+     "implied": 4.832,
+     "diff": -0.143
     },
     {
      "what": "US Federal Government",
-     "direct": 1.846,
-     "implied": 1.707,
-     "diff": -0.14
+     "direct": 1.845,
+     "implied": 1.706,
+     "diff": -0.139
     },
     {
      "what": "Gambling & Casinos",
-     "direct": 1.674,
-     "implied": 1.615,
-     "diff": -0.059
+     "direct": 1.639,
+     "implied": 1.578,
+     "diff": -0.061
     }
    ],
-   "populationFactor": 0.6631,
-   "coveredPopulationRate": 1.077,
-   "overallRate": 0.7141
+   "populationFactor": 0.6602,
+   "coveredPopulationRate": 1.0744,
+   "overallRate": 0.7094
   },
   "agents_402_snapshot": {
    "n": 7,
@@ -203,21 +203,21 @@
    "largest": [
     {
      "what": "ChatGPT-User",
-     "direct": 1.323,
-     "implied": 1.349,
-     "diff": 0.026
+     "direct": 1.317,
+     "implied": 1.345,
+     "diff": 0.028
     },
     {
      "what": "MistralAI-User",
-     "direct": 0.159,
-     "implied": 0.15,
+     "direct": 0.16,
+     "implied": 0.151,
      "diff": -0.009
     },
     {
-     "what": "Meta-ExternalFetcher",
-     "direct": 0.026,
-     "implied": 0.028,
-     "diff": 0.002
+     "what": "Claude-User",
+     "direct": 0.138,
+     "implied": 0.138,
+     "diff": 0.001
     },
     {
      "what": "Google-NotebookLM",
@@ -226,15 +226,15 @@
      "diff": 0.001
     },
     {
-     "what": "TikTokSpider",
-     "direct": 0.026,
-     "implied": 0.027,
+     "what": "Meta-ExternalFetcher",
+     "direct": 0.038,
+     "implied": 0.04,
      "diff": 0.001
     }
    ],
-   "populationFactor": 0.9773,
-   "coveredPopulationRate": 0.7307,
-   "overallRate": 0.7141
+   "populationFactor": 0.9761,
+   "coveredPopulationRate": 0.7267,
+   "overallRate": 0.7094
   },
   "industries_402_monthly": {
    "months": 21,
@@ -247,7 +247,7 @@
     "2025-05": 0.7606,
     "2025-06": 0.8037,
     "2025-07": 0.7855,
-    "2025-08": 0.804,
+    "2025-08": 0.8041,
     "2025-09": 0.8855,
     "2025-10": 0.9494,
     "2025-11": 1.0925,
@@ -257,10 +257,10 @@
     "2026-03": 0.8256,
     "2026-04": 0.8118,
     "2026-05": 0.8076,
-    "2026-06": 0.8023,
-    "2026-07": 0.6528,
-    "2026-08": 0.4739,
-    "2026-09": 0.4818
+    "2026-06": 0.8024,
+    "2026-07": 0.6529,
+    "2026-08": 0.4741,
+    "2026-09": 0.482
    },
    "largest": [
     {
@@ -325,13 +325,13 @@
      "what": "2025-04",
      "direct": 15.142,
      "implied": 15.142,
-     "diff": 0.0
+     "diff": -0.0
     },
     {
      "what": "2025-05",
      "direct": 17.457,
      "implied": 17.457,
-     "diff": 0.0
+     "diff": -0.0
     }
    ],
    "note": "direct = August 2026 pack, implied = this pull"
@@ -377,22 +377,22 @@
   }
  },
  "pullStats": {
-  "avgResponseSeconds": 4.56,
+  "avgResponseSeconds": 3.82,
   "industryTrendsComplete": true,
   "rateLimitPauses": 0,
-  "requests": 1049,
-  "seconds": 850
+  "requests": 1048,
+  "seconds": 721
  },
  "liveCheck": {
-  "checkedAt": "2026-10-10T12:53:33Z",
+  "checkedAt": "2026-10-11T13:10:36Z",
   "results": [
    {
     "window": "month 2026-09",
     "code": "403",
-    "published": 31.1752,
-    "requeriedDirect": 31.1752,
-    "independentRoute": 29.7515,
-    "diffPP": -1.4238
+    "published": 31.1753,
+    "requeriedDirect": 31.1753,
+    "independentRoute": 29.7514,
+    "diffPP": -1.4239
    },
    {
     "window": "month 2026-09",
@@ -405,18 +405,18 @@
    {
     "window": "year to date",
     "code": "403",
-    "published": 25.4775,
-    "requeriedDirect": 25.4777,
-    "independentRoute": 24.918,
-    "diffPP": -0.5595
+    "published": 25.535,
+    "requeriedDirect": 25.535,
+    "independentRoute": 24.949,
+    "diffPP": -0.586
    },
    {
     "window": "year to date",
     "code": "402",
-    "published": 0.7141,
-    "requeriedDirect": 0.7141,
-    "independentRoute": 0.6985,
-    "diffPP": -0.0157
+    "published": 0.7094,
+    "requeriedDirect": 0.7094,
+    "independentRoute": 0.6936,
+    "diffPP": -0.0158
    }
   ],
   "errors": []
