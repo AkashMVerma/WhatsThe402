@@ -14,15 +14,22 @@
     <a class="skip" href="#main">Skip to content</a>
     <header class="top">
       <a class="brand" href="#" data-view="overview">WhatsThe402</a>
-      <label class="month" for="month">
-        <span id="month-label"></span>
-        <input id="month" type="range" min="0" max="0" step="1" value="0" />
-      </label>
+      <div class="month" id="month-ctl">
+        <div class="month-head">
+          <label class="month-k" for="month">Month</label>
+          <button type="button" class="step" id="m-prev" aria-label="Previous month"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2.5 4.5 7 9 11.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <output id="month-label" for="month" aria-live="polite"></output>
+          <button type="button" class="step" id="m-next" aria-label="Next month"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 2.5 9.5 7 5 11.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="month-track">
+          <input id="month" type="range" min="0" max="0" step="1" value="0" />
+          <div class="ticks" id="month-ticks" aria-hidden="true"></div>
+        </div>
+      </div>
       <nav class="tabs" aria-label="Sections">
         <a href="#" data-view="overview">Overview</a>
         <a href="#industries" data-view="industries">Industries</a>
         <a href="#agents" data-view="agents">Agents</a>
-        <a href="#method" data-view="method">Method</a>
       </nav>
     </header>
 
@@ -34,11 +41,12 @@
     </main>
 
     <footer class="foot">
-      <span id="foot-source"></span>
+      <p class="powered">Powered by <a href="https://4mica.io" rel="noopener">4Mica</a></p>
       <span class="foot-actions">
         <button type="button" class="link-btn" id="dl-csv">Download CSV</button>
         <button type="button" class="btn" id="cite">Copy citation</button>
       </span>
+      <p class="foot-source" id="foot-source"></p>
     </footer>
 
     <p class="load-error" id="load-error" hidden></p>

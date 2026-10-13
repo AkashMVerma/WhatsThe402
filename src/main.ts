@@ -4,7 +4,8 @@ import { initIndustries } from "./industries";
 import type { Dataset, Verification } from "./types";
 
 type View = "overview" | "industries" | "agents" | "method";
-const VIEWS: View[] = ["overview", "industries", "agents", "method"];
+// Method is hidden for now: its view still renders, but it has no tab and #method falls back to the overview.
+const VIEWS: View[] = ["overview", "industries", "agents"];
 const LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function monthLong(ym: string): string {
@@ -116,13 +117,37 @@ function main(d: Dataset, v: Verification | null) {
 
   // ---- Month control ----
   const slider = $<HTMLInputElement>("month");
-  slider.max = String(months.length - 1);
+  const last = months.length - 1;
+  slider.max = String(last);
   slider.addEventListener("input", () => setMonth(+slider.value));
+  const prev = $<HTMLButtonElement>("m-prev");
+  const next = $<HTMLButtonElement>("m-next");
+  prev.addEventListener("click", () => state.idx > 0 && setMonth(state.idx - 1));
+  next.addEventListener("click", () => state.idx < last && setMonth(state.idx + 1));
+  // One tick per month under the track; January ticks are taller and carry the year.
+  $("month-ticks").innerHTML = months
+    .map((m) => {
+      const jan = m.endsWith("-01");
+      return `<span class="tick${jan ? " jan" : ""}">${jan ? `<i>${m.slice(0, 4)}</i>` : ""}</span>`;
+    })
+    .join("");
+  // A short pulse on the handle the first time the page opens, so it reads as draggable.
+  // Stops at the first touch of the control; CSS skips it under reduced motion.
+  const ctl = $("month-ctl");
+  ctl.classList.add("hint");
+  const stopHint = () => ctl.classList.remove("hint");
+  ctl.addEventListener("pointerdown", stopHint, { once: true });
+  ctl.addEventListener("keydown", stopHint, { once: true });
+  setTimeout(stopHint, 4200);
 
   function setMonth(k: number) {
     state.idx = k;
     const m = months[k];
     slider.value = String(k);
+    slider.setAttribute("aria-valuetext", monthLong(m));
+    slider.style.setProperty("--f", String(last ? k / last : 0));
+    prev.disabled = k === 0;
+    next.disabled = k === last;
     $("month-label").textContent = monthLong(m);
     document.querySelectorAll("[data-month]").forEach((el) => (el.textContent = monthLong(m)));
 

@@ -97,23 +97,164 @@ p {
   font-size: 22px;
   text-decoration: none;
 }
+/* Month control. Built to read as a slider at a glance: a "Month" label, step
+   buttons either side of the value, a filled track with a raised handle, and a
+   tick per month with the year under each January. */
 .month {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px 16px;
+}
+.month-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.month-k {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-right: 4px;
+}
+.month output {
+  min-width: 136px;
+  text-align: center;
   font-weight: 600;
   font-size: 15px;
+  font-variant-numeric: tabular-nums;
 }
-.month span {
-  min-width: 132px;
-  text-align: right;
+.step {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #cfcfcf;
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+.step:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+.step:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.month-track {
+  position: relative;
+  width: clamp(200px, 25vw, 340px);
+  padding-bottom: 14px;
 }
 .month input {
-  width: clamp(160px, 24vw, 320px);
-  height: 40px;
+  --f: 1;
+  --fill: calc(11px + (100% - 22px) * var(--f));
+  display: block;
+  width: 100%;
+  height: 28px;
   margin: 0;
-  accent-color: var(--ink);
-  cursor: pointer;
+  background: transparent;
+  cursor: grab;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.month input:active {
+  cursor: grabbing;
+}
+.month input:focus {
+  outline: none;
+}
+.month input::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--ink) var(--fill), #d6d6d6 var(--fill));
+}
+.month input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -9px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+  transition: box-shadow 0.15s ease;
+}
+.month input:hover::-webkit-slider-thumb {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28), 0 0 0 7px rgba(17, 17, 17, 0.08);
+}
+.month input:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--blue);
+}
+.month input::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #d6d6d6;
+}
+.month input::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ink);
+}
+.month input::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+}
+.month input:hover::-moz-range-thumb {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28), 0 0 0 7px rgba(17, 17, 17, 0.08);
+}
+.month input:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--blue);
+}
+.month.hint input::-webkit-slider-thumb {
+  animation: nudge 1.3s ease-out 3;
+}
+.month.hint input::-moz-range-thumb {
+  animation: nudge 1.3s ease-out 3;
+}
+@keyframes nudge {
+  0% {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28), 0 0 0 0 rgba(30, 64, 255, 0.45);
+  }
+  100% {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28), 0 0 0 12px rgba(30, 64, 255, 0);
+  }
+}
+.ticks {
+  position: absolute;
+  left: 11px;
+  right: 11px;
+  top: 21px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.tick {
+  position: relative;
+  width: 1px;
+  height: 5px;
+  background: #bdbdbd;
+}
+.tick.jan {
+  height: 8px;
+  background: var(--ink-2);
+}
+.tick i {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  transform: translateX(-50%);
+  font-style: normal;
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--muted);
 }
 .tabs {
   display: flex;
@@ -204,6 +345,12 @@ p {
   .field,
   .cell {
     transition: none;
+  }
+  .month.hint input::-webkit-slider-thumb {
+    animation: none;
+  }
+  .month.hint input::-moz-range-thumb {
+    animation: none;
   }
   .cell:hover {
     transform: none;
@@ -725,6 +872,27 @@ code {
   border-top: 1px solid var(--ink);
   font-size: 15px;
 }
+.powered {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 18px;
+}
+.powered a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.powered a:hover {
+  color: var(--blue);
+}
+.foot-source {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
 .foot-actions {
   display: flex;
   gap: 16px;
@@ -755,6 +923,16 @@ code {
 }
 
 /* ---- Narrow screens ---- */
+@media (max-width: 1180px) {
+  .month {
+    order: 3;
+    width: 100%;
+  }
+  .month-track {
+    flex: 1;
+    width: auto;
+  }
+}
 @media (max-width: 900px) {
   .field,
   .thousand {
@@ -766,23 +944,33 @@ code {
 }
 @media (max-width: 640px) {
   .top {
-    gap: 10px 16px;
+    gap: 6px 12px;
+    padding-top: 10px;
+    padding-bottom: 8px;
+  }
+  .brand {
+    font-size: 18px;
   }
   .month {
-    order: 3;
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+  .month-head {
     width: 100%;
   }
-  .month span {
-    min-width: 0;
-    text-align: left;
-    width: 132px;
-  }
-  .month input {
+  .month output {
     flex: 1;
-    width: auto;
+  }
+  .month-track {
+    width: 100%;
+  }
+  .step {
+    width: 40px;
+    height: 40px;
   }
   .tabs {
-    gap: 16px;
+    gap: 14px;
+    font-size: 14px;
   }
   .cell {
     height: 32px;

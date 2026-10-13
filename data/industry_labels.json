@@ -1,553 +1,558 @@
 {
- "_about": "What each Cloudflare Radar industry label covers, shown behind the info icon. Cloudflare publishes no definitions; its glossary says only that industries group businesses by their primary activities. Most labels match LinkedIn's industry list word for word, so for those we summarise LinkedIn's definition (source 'linkedin', with LinkedIn's current name where it changed). Labels with no LinkedIn match are our best reading (source 'cloudflare'). Review before relying on any single description.",
+ "_about": "What each Cloudflare Radar industry label covers, shown behind the info icon. Cloudflare publishes no definitions; its glossary says only that industries group businesses by their primary activities. Most labels match LinkedIn's industry list word for word, and for those the text follows LinkedIn's definition (source 'linkedin', with LinkedIn's current name where it changed). Labels with no LinkedIn match are our own reading (source 'cloudflare').",
  "labels": {
   "Accounting": [
-   "Accounting, audit, bookkeeping and tax firms.",
+   "Firms that keep the books, audit accounts, prepare tax returns and give financial advice to people and businesses.",
    "linkedin"
   ],
   "Adult Entertainment": [
-   "Adult content sites and services.",
+   "Websites and services that sell or host sexually explicit content for adults.",
    "cloudflare"
   ],
   "Airlines/Aviation": [
-   "Airlines and air transport of passengers or cargo.",
+   "Airlines, airports and the companies that fly passengers or cargo, along with the businesses that support them on the ground.",
    "linkedin"
   ],
   "Apparel & Fashion": [
-   "Clothing, footwear and fashion brands.",
+   "Brands and designers that make clothing, shoes and accessories, and the shops that sell their own lines.",
    "linkedin"
   ],
   "Architecture & Planning": [
-   "Architects and planners who design buildings and spaces.",
+   "Architects, landscape architects and town planners who design buildings, public spaces and the way land is used.",
    "linkedin",
    "Architecture and Planning"
   ],
   "Arts and Crafts": [
-   "Makers and sellers of craft goods and supplies.",
+   "Businesses that make or sell handmade goods and the materials people use for crafts and hobbies.",
    "linkedin"
   ],
   "Automotive": [
-   "Car makers, parts suppliers and automotive services.",
+   "Car and truck makers, the companies that supply their parts, and the dealers and garages that sell and service vehicles.",
    "linkedin"
   ],
   "Banking": [
-   "Banks and credit institutions.",
+   "Banks and credit unions that take deposits, lend money and run accounts for people and businesses.",
    "linkedin"
   ],
   "Biotechnology": [
-   "Biotech research and product companies.",
+   "Companies and labs that use living cells and biological processes to develop medicines, diagnostic tests and other products.",
    "linkedin",
    "Biotechnology Research"
   ],
   "Broadcast Media": [
-   "Radio and TV broadcasters and their online channels.",
+   "Television and radio broadcasters, including the websites and streaming services they run alongside their channels.",
    "linkedin"
   ],
   "Broadcasting": [
-   "Radio and TV broadcasters. Overlaps with Broadcast Media.",
+   "Television and radio stations and networks that put out programmes over the air, by cable or online.",
    "cloudflare"
   ],
   "Building Materials": [
-   "Makers and sellers of construction materials.",
+   "Companies that make or supply what buildings are made from, such as cement, timber, glass, bricks and insulation.",
    "linkedin"
   ],
   "Business Services": [
-   "Broad category of services sold to businesses.",
+   "Companies that sell services to other businesses, such as office support, payroll, facilities management and document handling.",
    "cloudflare"
   ],
   "Chemicals": [
-   "Chemical manufacturers.",
+   "Companies that make chemicals, whether bulk industrial chemicals or specialty products such as coatings, adhesives and fertilisers.",
    "linkedin"
   ],
   "Civic & Social Organization": [
-   "Clubs, associations and community groups.",
+   "Clubs, associations and community groups that bring people together around a shared interest, cause or neighbourhood.",
    "linkedin"
   ],
   "Commercial Real Estate": [
-   "Owners, brokers and managers of office, retail and industrial property.",
+   "Companies that own, lease, broker or manage offices, shops, warehouses and other property used by businesses.",
    "linkedin"
   ],
   "Computer & Network Security": [
-   "Cybersecurity products and services.",
+   "Companies that make security software and hardware, or provide services that protect computer systems and networks from attack.",
    "linkedin",
    "Computer and Network Security"
   ],
   "Computer Games": [
-   "Game studios and publishers.",
+   "Studios and publishers that make video games for consoles, computers and phones.",
    "linkedin"
   ],
   "Computer Hardware": [
-   "Makers of computers, components and peripherals.",
+   "Companies that make computers, servers, storage, components and peripherals such as keyboards and printers.",
    "linkedin"
   ],
   "Computer Software": [
-   "Companies that make and sell software, including SaaS and apps.",
+   "Companies that build and sell software, from desktop programs and mobile apps to the online tools businesses pay for by subscription.",
    "linkedin",
    "Software Development"
   ],
   "Construction": [
-   "Builders and contractors for buildings and infrastructure.",
+   "Builders and contractors who put up homes, commercial buildings, roads and other infrastructure.",
    "linkedin"
   ],
   "Consumer Electronics": [
-   "Makers of phones, TVs, audio and other home electronics.",
+   "Companies that make phones, televisions, headphones, cameras and other electronics people buy for their homes.",
    "linkedin"
   ],
   "Consumer Goods": [
-   "Makers of everyday products sold to households.",
-   "linkedin"
-  ],
-  "Consumer Services": [
-   "Services sold to individuals, such as repairs and personal or household services.",
+   "Companies that make the everyday products households buy, such as cleaning supplies, toiletries, packaged food and small appliances.",
    "linkedin"
   ],
   "Consumer products": [
-   "Broad category of household products. Overlaps with Consumer Goods.",
+   "Brands and makers of products sold to ordinary shoppers, from household items and toiletries to small gadgets.",
    "cloudflare"
   ],
+  "Consumer Services": [
+   "Businesses that sell services directly to individuals, such as repairs, cleaning, personal care and other help around the home.",
+   "linkedin"
+  ],
   "Cosmetics": [
-   "Beauty and personal-care brands.",
+   "Brands that make makeup, skincare, haircare, fragrance and other personal-care products.",
    "linkedin"
   ],
   "Cryptocurrency": [
-   "Crypto exchanges, wallets and blockchain projects.",
+   "Exchanges, wallets, blockchain projects and other businesses built around digital currencies.",
    "cloudflare"
   ],
   "Design": [
-   "Design studios: graphic, product and interior design.",
+   "Studios and freelancers who do graphic, product, interior or brand design for their clients.",
    "linkedin",
    "Design Services"
   ],
   "E-Learning": [
-   "Online courses and education platforms.",
+   "Websites and companies that teach through online courses, tutoring and other digital learning tools.",
    "linkedin"
   ],
   "Ecommerce": [
-   "Online shops and marketplaces. Overlaps with Retail.",
+   "Online shops and marketplaces where people buy goods over the internet.",
    "cloudflare"
   ],
   "Education": [
-   "Broad education category. Overlaps with Education Management and Higher Education.",
+   "Schools, colleges, universities and other organisations that teach or support learning.",
    "cloudflare"
   ],
   "Education Management": [
-   "Schools, universities and the organisations that run education.",
+   "Schools and universities and the organisations that run them, including school districts and companies that provide education services.",
    "linkedin"
   ],
   "Electrical/Electronic Manufacturing": [
-   "Makers of electrical and electronic equipment.",
+   "Companies that make electrical and electronic equipment, such as motors, wiring, circuit boards and power systems.",
    "linkedin"
   ],
   "Entertainment": [
-   "Entertainment companies and venues.",
+   "Companies that produce or put on entertainment, including live shows, theme parks, studios and venues.",
    "linkedin"
   ],
   "Environmental Services": [
-   "Environmental consulting, clean-up and remediation.",
+   "Firms that handle waste, clean up pollution and advise organisations on their environmental impact and obligations.",
    "linkedin"
   ],
   "Events Services": [
-   "Event organisers, venues and ticketing.",
+   "Companies that plan, host or sell tickets for conferences, weddings, concerts and other events.",
    "linkedin"
   ],
   "Executive Office": [
-   "Heads of government and their offices.",
+   "The offices of heads of state and government, such as a president's or prime minister's office.",
    "linkedin"
   ],
   "Farming": [
-   "Farms and agricultural producers.",
+   "Farms, ranches and other producers that grow crops or raise livestock.",
    "linkedin"
   ],
   "Finance": [
-   "Broad finance category. Overlaps with Financial Services.",
+   "Banks, lenders, investment firms, payment companies and other businesses whose work is managing or moving money.",
    "cloudflare"
   ],
   "Financial Services": [
-   "Firms that make or handle financial transactions: payments, lending, investing, insurance.",
+   "Companies that move, lend, invest or insure money, including payment processors, lenders, brokers and insurers.",
    "linkedin"
   ],
   "Fine Art": [
-   "Artists, galleries and art dealers.",
+   "Artists, galleries, auction houses and dealers that create or sell works of art.",
    "linkedin"
   ],
   "Food & Beverages": [
-   "Food and drink brands and producers.",
+   "Companies behind the food and drink brands sold in shops, cafés and restaurants.",
    "linkedin"
   ],
   "Food Production": [
-   "Food manufacturers and processors.",
+   "Manufacturers and processors that turn raw ingredients into packaged and prepared food.",
    "linkedin"
   ],
   "Furniture": [
-   "Furniture makers and sellers.",
+   "Companies that design, make or sell furniture for homes and offices.",
    "linkedin"
   ],
   "Gambling & Casinos": [
-   "Casinos, betting and online gambling sites.",
+   "Casinos, sports betting companies, lotteries and online gambling sites.",
    "linkedin"
   ],
   "Gaming": [
-   "Video game companies and gaming platforms. Overlaps with Computer Games.",
+   "Video game studios and publishers and the platforms where people buy, play and stream games.",
    "cloudflare"
   ],
   "Government": [
-   "Broad government category. Overlaps with Government Administration.",
+   "Government bodies at every level, from national ministries to local councils.",
    "cloudflare"
   ],
   "Government Administration": [
-   "Government bodies and public agencies.",
+   "Public agencies and departments that run government services and enforce regulations.",
    "linkedin"
   ],
   "Health, Wellness and Fitness": [
-   "Gyms, fitness, wellness and nutrition businesses.",
+   "Gyms, personal trainers, spas, nutrition coaches and other businesses that help people stay healthy.",
    "linkedin"
   ],
   "Higher Education": [
-   "Universities and colleges.",
+   "Universities, colleges and other institutions that award degrees.",
    "linkedin"
   ],
   "Holding Companies": [
-   "Companies that own stakes in other companies.",
+   "Companies that exist mainly to own controlling shares in other companies.",
    "cloudflare"
   ],
   "Holding Companies & Conglomerates": [
-   "Conglomerates and holding groups.",
+   "Holding groups and conglomerates that own a range of businesses, often in unrelated industries.",
    "cloudflare"
   ],
   "Hospital & Health Care": [
-   "Hospitals, clinics and care providers.",
+   "Hospitals, clinics, doctors' practices, care homes and other providers of medical care.",
    "linkedin"
   ],
   "Hospitality": [
-   "Hotels, accommodation, restaurants and related services.",
+   "Hotels, holiday rentals, bars, restaurants and other businesses that look after guests.",
    "linkedin"
   ],
   "Human Resources": [
-   "HR services and consultancies.",
+   "Firms that handle hiring, payroll, benefits, training or HR consulting on behalf of other companies.",
    "linkedin",
    "Human Resources Services"
   ],
-  "IT Services": [
-   "IT service providers. Overlaps with Information Technology and Services.",
-   "cloudflare"
-  ],
   "Industrial Automation": [
-   "Makers of industrial control and automation systems.",
+   "Companies that make the control systems, robots and sensors used to automate factories and industrial plants.",
    "linkedin"
   ],
   "Information Services": [
-   "Libraries, archives, databases and web search portals.",
+   "Libraries, archives, data providers and search portals that collect information and make it available to others.",
    "linkedin"
   ],
   "Information Technology and Services": [
-   "IT consultancies and service firms that build, run or support computer systems for clients.",
+   "Consultancies and service firms that design, build, run or support computer systems for other organisations.",
    "linkedin",
    "IT Services and IT Consulting"
   ],
   "Insurance": [
-   "Insurers and insurance brokers.",
+   "Insurers, brokers and agents who sell cover for health, life, property, vehicles and businesses.",
    "linkedin"
   ],
   "International Affairs": [
-   "International organisations and diplomatic bodies.",
+   "International organisations, embassies and diplomatic bodies that work on relations between countries.",
    "linkedin"
   ],
   "International Trade and Development": [
-   "Trade bodies and development organisations.",
+   "Import and export businesses, trade promotion bodies and organisations that fund or run development programmes abroad.",
    "linkedin"
   ],
   "Internet": [
-   "Web platforms and online services: marketplaces, social networks, streaming, hosting, data and search.",
+   "Companies whose main product is a website or online service, such as search engines, social networks, marketplaces, streaming services and web hosts.",
    "linkedin",
    "Technology, Information and Internet"
   ],
   "Internet Service Providers, Website Hosting & Internet-related Services": [
-   "Internet access providers and web hosts. Very little agent traffic.",
+   "Companies that sell internet access, host websites or provide the domains and other services needed to put a site online.",
    "cloudflare"
   ],
   "Investment Banking": [
-   "Investment banks and advisory firms.",
+   "Banks and advisory firms that help companies raise money and buy, sell or merge businesses.",
    "linkedin"
   ],
   "Investment Management": [
-   "Asset managers and investment funds.",
+   "Asset managers, fund companies and wealth managers who invest money on behalf of their clients.",
    "linkedin"
   ],
+  "IT Services": [
+   "Companies that set up, run and support computer systems, networks and software for their clients.",
+   "cloudflare"
+  ],
   "Law Enforcement": [
-   "Police and law-enforcement agencies.",
+   "Police forces and other agencies whose job is enforcing the law.",
    "linkedin"
   ],
   "Law Practice": [
-   "Law firms.",
+   "Law firms and lawyers who represent and advise clients.",
    "linkedin"
   ],
   "Legal Services": [
-   "Legal service providers, including notaries and paralegals.",
+   "Providers of legal help outside law firms, such as notaries, paralegals, legal publishers and online legal services.",
    "linkedin"
   ],
   "Leisure, Travel & Tourism": [
-   "Travel agencies, booking sites, tour operators and attractions.",
+   "Travel agencies, booking sites, tour operators and the attractions tourists visit.",
    "linkedin"
   ],
   "Libraries": [
-   "Libraries and archives.",
+   "Public, academic and specialist libraries and the archives that keep records and collections.",
    "linkedin"
   ],
   "Local Business": [
-   "Small local businesses without a more specific label.",
+   "Small businesses that serve one town or area, such as shops, tradespeople and local service providers.",
    "cloudflare"
   ],
   "Logistics and Supply Chain": [
-   "Shipping, freight and warehousing.",
+   "Companies that move and store goods, including freight forwarders, couriers, shipping lines and warehouses.",
    "linkedin"
   ],
   "Luxury Goods & Jewelry": [
-   "Luxury brands and jewellers.",
+   "Luxury brands and jewellers selling high-end watches, jewellery, leather goods and similar items.",
    "linkedin"
   ],
   "Machinery": [
-   "Makers of industrial machinery.",
+   "Companies that make industrial machines such as engines, pumps and tools, and equipment for farms and building sites.",
    "linkedin"
   ],
   "Management Consulting": [
-   "Strategy and management consultancies.",
+   "Consultancies that advise organisations on strategy, operations, finance and how they are run.",
    "linkedin",
    "Business Consulting and Services"
   ],
   "Manufacturing": [
-   "Companies that make physical products.",
+   "Companies that make physical products in factories, across many different kinds of goods.",
    "cloudflare"
   ],
   "Market Research": [
-   "Firms that gather and sell market and public-opinion data.",
+   "Firms that run surveys and studies on markets, customers and public opinion, and sell what they find.",
    "linkedin"
   ],
   "Marketing and Advertising": [
-   "Ad agencies, marketing services and advertising businesses.",
+   "Ad agencies, marketing firms and companies that buy, sell or place advertising.",
    "linkedin"
   ],
   "Mechanical or Industrial Engineering": [
-   "Engineering firms in mechanical and industrial fields.",
+   "Engineering firms that design machines, production lines and industrial processes.",
    "linkedin"
   ],
   "Media": [
-   "Media companies not filed under a narrower media label.",
+   "Companies that produce or publish news, entertainment and other content in print, on air or online.",
    "cloudflare"
   ],
   "Media & Internet": [
-   "Broad media and online category. Overlaps with Media and Internet.",
+   "Publishers, broadcasters and online platforms that make content or distribute it on the web.",
    "cloudflare"
   ],
   "Media Production": [
-   "Studios producing video, audio and multimedia content, usually for others.",
+   "Studios and production companies that make video, audio, animation and other content, usually for clients.",
    "linkedin"
   ],
   "Medical Devices": [
-   "Makers of medical equipment.",
+   "Companies that make medical equipment, from surgical instruments and implants to scanners and patient monitors.",
    "linkedin"
   ],
   "Military": [
-   "Armed forces and defence bodies.",
+   "Armed forces and defence ministries and the bodies that run them.",
    "linkedin"
   ],
   "Mining & Metals": [
-   "Mining companies and metal producers.",
+   "Companies that mine coal, metals and minerals or process metals such as steel and aluminium.",
    "linkedin"
   ],
   "Motion Pictures and Film": [
-   "Film studios and distributors.",
+   "Film studios, producers and distributors that make and release movies.",
    "linkedin"
   ],
   "Museums and Institutions": [
-   "Museums, historical sites and cultural institutions.",
+   "Museums, historic sites, zoos and other cultural institutions open to the public.",
    "linkedin"
   ],
   "Music": [
-   "Record labels, music publishers and artists.",
+   "Record labels, music publishers, artists and the businesses around recorded and live music.",
    "linkedin"
   ],
   "Newspapers": [
-   "Newspaper publishers, in print or online.",
+   "Publishers of daily and weekly newspapers, in print and online.",
    "linkedin",
    "Newspaper Publishing"
   ],
   "Non-Profit": [
-   "Nonprofits. Overlaps with Nonprofit Organization Management.",
+   "Charities, foundations and other nonprofit organisations working for a cause.",
    "cloudflare"
   ],
   "Nonprofit Organization Management": [
-   "Charities and nonprofit organisations.",
+   "Charities, foundations and other nonprofits, along with the organisations that manage and fund them.",
    "linkedin"
   ],
   "Oil & Energy": [
-   "Oil, gas and energy companies.",
+   "Companies that produce, refine or sell oil, gas, coal and other forms of energy, including renewables.",
    "linkedin"
   ],
   "Online Media": [
-   "Publishers that put audio and video out only on the internet.",
+   "Publishers and creators that release audio and video only on the internet, such as podcasts and online video channels.",
    "linkedin",
    "Online Audio and Video Media"
   ],
   "Organizations": [
-   "Associations and membership bodies without a more specific label.",
+   "Associations, societies and membership bodies that are not run as businesses.",
    "cloudflare"
   ],
   "Outsourcing/Offshoring": [
-   "Outsourcing and offshoring service providers.",
+   "Companies that take on work for other businesses, often from another country, such as customer support, back-office tasks and software development.",
    "linkedin",
    "Outsourcing and Offshoring Consulting"
   ],
   "Paper & Forest Products": [
-   "Paper makers and forestry businesses.",
+   "Companies that manage forests and turn wood into timber, pulp, paper and packaging.",
    "linkedin"
   ],
   "Performing Arts": [
-   "Theatres, dance and music companies.",
+   "Theatre, dance, opera and music companies and the venues where they perform.",
    "linkedin"
   ],
   "Pharmaceuticals": [
-   "Drug makers.",
+   "Companies that research, make and sell medicines.",
    "linkedin"
   ],
   "Photography": [
-   "Photographers and photo studios.",
+   "Photographers, photo studios and stock-image businesses.",
    "linkedin"
   ],
   "Plastics": [
-   "Plastics manufacturers.",
+   "Manufacturers of plastic materials and plastic products such as packaging, pipes, film and moulded parts.",
    "linkedin"
   ],
   "Political Organization": [
-   "Political parties and campaigns.",
+   "Political parties, campaigns and advocacy groups that work to influence elections and policy.",
    "linkedin"
   ],
   "Print & Digital Media": [
-   "Publishers working across print and online.",
+   "Publishers of magazines, newspapers and books that release their work both in print and online.",
    "cloudflare"
   ],
   "Printing": [
-   "Commercial printers.",
+   "Commercial printers that produce books, packaging, labels, signs and marketing materials for clients.",
    "linkedin"
   ],
   "Professional Training & Coaching": [
-   "Trainers and coaches for professionals.",
+   "Trainers, coaches and course providers who help working professionals build their skills.",
    "linkedin"
   ],
   "Professional Training; Corporate": [
-   "Corporate training providers. Overlaps with Professional Training & Coaching.",
+   "Companies that run training programmes for employers and their staff.",
    "cloudflare"
   ],
   "Public Policy": [
-   "Policy bodies and think tanks working on public policy.",
+   "Think tanks, policy institutes and public bodies that research and shape government policy.",
    "linkedin"
   ],
   "Public Relations and Communications": [
-   "PR agencies and communications consultancies.",
+   "PR agencies and communications consultancies that manage how organisations deal with the press and the public.",
    "linkedin",
    "Public Relations and Communications Services"
   ],
   "Publishing": [
-   "Publishers of newspapers, magazines, other periodicals and books.",
+   "Publishers of books, magazines, journals and other periodicals, in print and online.",
    "linkedin",
    "Book and Periodical Publishing"
   ],
   "Real Estate": [
-   "Agents, brokers, landlords and property managers.",
+   "Estate agents, brokers, landlords and property managers dealing in homes and other property.",
    "linkedin"
   ],
   "Recreational Facilities and Services": [
-   "Leisure centres, parks and recreation businesses.",
+   "Leisure centres, golf courses, ski resorts, parks and other places people go for recreation.",
    "linkedin"
   ],
   "Religious Institutions": [
-   "Churches and religious organisations.",
+   "Churches, mosques, temples, synagogues and other religious organisations.",
    "linkedin"
   ],
   "Research": [
-   "Research organisations and labs.",
+   "Research institutes, labs and firms that carry out scientific, technical or social research.",
    "linkedin",
    "Research Services"
   ],
   "Restaurants": [
-   "Restaurants and food service.",
+   "Restaurants, cafés, takeaways and food delivery businesses.",
    "linkedin"
   ],
   "Retail": [
-   "Shops selling goods to the public, in stores or online.",
+   "Shops and chains that sell goods to the public, in stores or online.",
    "linkedin"
   ],
   "Security and Investigations": [
-   "Security guards, alarm services and investigators.",
+   "Companies that provide security guards, alarm monitoring, private investigation and similar protection services.",
    "linkedin"
   ],
   "Semiconductors": [
-   "Chip designers and makers.",
+   "Companies that design or manufacture computer chips, and the makers of the equipment used to produce them.",
    "linkedin"
   ],
+  "software": [
+   "Companies that build and sell software, including apps and the subscription services businesses run on.",
+   "cloudflare"
+  ],
   "Sporting Goods": [
-   "Makers and sellers of sports equipment.",
+   "Companies that make or sell sports equipment, sportswear and outdoor gear.",
    "linkedin"
   ],
   "Sports": [
-   "Sports teams, leagues and clubs.",
+   "Professional and amateur sports teams, leagues, clubs and governing bodies.",
    "linkedin"
   ],
   "Staffing and Recruiting": [
-   "Recruitment agencies and job boards.",
+   "Recruitment agencies, staffing firms and job boards that match people with jobs.",
    "linkedin"
   ],
   "Supermarkets": [
-   "Supermarkets and grocery chains.",
+   "Supermarket and grocery chains, including their online shopping and delivery services.",
    "linkedin"
   ],
   "Telecommunications": [
-   "Phone, mobile, cable and internet access providers.",
+   "Companies that provide phone, mobile, cable, satellite and internet connections.",
    "linkedin"
   ],
+  "Think Tanks": [
+   "Independent institutes that research policy, economic and social questions and publish their findings to influence public debate.",
+   "linkedin",
+   null
+  ],
   "Translation and Localization": [
-   "Translation and localisation services.",
+   "Translators and agencies that adapt text, websites and software for other languages and markets.",
    "linkedin"
   ],
   "Transportation/Trucking/Railroad": [
-   "Trucking, rail and road transport.",
+   "Trucking companies, railways, bus operators and other businesses that carry goods or people over land.",
    "linkedin"
   ],
   "US Federal Government": [
-   "US federal agencies.",
+   "Departments and agencies of the United States federal government.",
    "cloudflare"
   ],
   "US State Government": [
-   "US state agencies.",
+   "Agencies and departments run by the individual US state governments.",
    "cloudflare"
   ],
   "Utilities": [
-   "Electricity, gas and water utilities.",
+   "Companies that supply electricity, gas, water and sewage services.",
    "linkedin"
   ],
   "Veterinary": [
-   "Vets and animal health services.",
+   "Vets, animal hospitals and other providers of care for pets and livestock.",
    "linkedin",
    "Veterinary Services"
   ],
   "Website Design & Managment": [
-   "Web design and site management agencies. Spelling is Cloudflare's.",
+   "Agencies and freelancers who design, build and maintain websites for clients.",
    "cloudflare"
   ],
   "Wholesale": [
-   "Wholesalers and distributors.",
+   "Wholesalers and distributors that buy goods in bulk from manufacturers and sell them on to shops and other businesses.",
    "linkedin"
   ],
   "Wine and Spirits": [
-   "Wineries, distillers and drinks brands.",
+   "Wineries, breweries, distillers and the brands and merchants that sell alcoholic drinks.",
    "linkedin"
   ],
   "Writing and Editing": [
-   "Writers, editors and content services.",
+   "Writers, editors, copywriters and agencies that produce or polish written content for clients.",
    "linkedin"
-  ],
-  "software": [
-   "Software companies, under a lower-case label kept separate from Computer Software.",
-   "cloudflare"
   ]
  }
 }

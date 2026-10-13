@@ -14,16 +14,6 @@ interface Row {
 const PAGE = 20;
 const INFO_SVG = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6.5"></circle><line x1="8" y1="7" x2="8" y2="11.5"></line><circle cx="8" cy="4.8" r="0.6" fill="currentColor"></circle></svg>`;
 
-function labelSource(i: Industry): string {
-  if (!i.label) return "Cloudflare label with no published definition.";
-  if (i.label.source === "linkedin") {
-    return i.label.linkedinName
-      ? `Label matches LinkedIn's industry list, where it is now called ${i.label.linkedinName}.`
-      : "Label matches LinkedIn's industry list.";
-  }
-  return "Cloudflare label with no published definition. This is our reading of it.";
-}
-
 function niceMax(v: number): number {
   const steps = [1, 2, 5, 10, 20, 30, 50, 75, 100];
   return steps.find((s) => s >= v) ?? 100;
@@ -102,8 +92,8 @@ export function initIndustries(host: HTMLElement, d: Dataset, getIdx: () => numb
     const isMonth = state.period === "month";
     q("#ind-title").textContent = isMonth ? `Industries, ${monthLabel(m)}` : `Industries, ${d.meta.windows.ytd.label}`;
     q("#ind-sub").textContent = isMonth
-      ? `The ${tracked.length} industries with the most agent traffic, for the month picked above. Labels are Cloudflare's; the info icon says what each covers.`
-      : `Every industry with at least ${d.meta.lowVolumeThresholdPct}% of agent traffic, ${d.meta.windows.ytd.label}. Labels are Cloudflare's; the info icon says what each covers.`;
+      ? `The ${tracked.length} industries with the most agent traffic in the month you picked at the top. Industry names come from Cloudflare, and the info icon next to each one explains what kind of business it covers.`
+      : `Every industry with at least ${d.meta.lowVolumeThresholdPct}% of agent traffic, ${d.meta.windows.ytd.label}. Industry names come from Cloudflare, and the info icon next to each one explains what kind of business it covers.`;
 
     const all = rows();
     const shown = state.showAll || state.q ? all : all.slice(0, PAGE);
@@ -151,7 +141,7 @@ export function initIndustries(host: HTMLElement, d: Dataset, getIdx: () => numb
             <button type="button" class="name-btn" data-open="${esc(i.name)}" aria-expanded="${open}">${esc(i.name)}</button>
             <span class="info">
               <button type="button" class="info-btn" data-info aria-expanded="false" aria-label="What ${esc(i.name)} covers">${INFO_SVG}</button>
-              <span class="pop" role="tooltip"><b>${esc(i.name)}</b>${esc(i.label?.desc ?? "No description yet.")}<small>${esc(labelSource(i))}</small></span>
+              <span class="pop" role="tooltip"><b>${esc(i.name)}</b>${esc(i.label?.desc ?? "We don't have a description for this one yet.")}</span>
             </span>
             ${flag}
           </span>

@@ -43,13 +43,13 @@ Every run of the workflow checks the data before anything is published:
    three different Radar queries (crawl-purpose mix, status mix, crawl-purpose mix of 403s)
    and reports the gap.
 
-Results are written to `public/data/verification.json` and summarised on the Method tab.
+Results are written to `public/data/verification.json`. The Method tab that summarises them is hidden for now (its code is still in `src/main.ts`).
 
 ## Industry labels
 
 Cloudflare publishes no definitions for its industry labels. `data/industry_labels.json` holds
 a one-line description for each, shown behind the info icon. Labels that match LinkedIn's
-industry list use LinkedIn's definition; the rest are marked as our reading.
+industry list use LinkedIn's definition; the rest are our own reading. The source is kept in the file but not shown on the site.
 
 To run a full refresh from a code push, put `[pull]` in the commit message.
 
