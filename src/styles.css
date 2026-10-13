@@ -252,7 +252,7 @@ p {
   left: 0;
   transform: translateX(-50%);
   font-style: normal;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.2;
   color: var(--muted);
 }
@@ -351,6 +351,9 @@ p {
   }
   .month.hint input::-moz-range-thumb {
     animation: none;
+  }
+  .top {
+    transition: none;
   }
   .cell:hover {
     transform: none;
@@ -879,6 +882,8 @@ code {
   font-size: 18px;
 }
 .powered a {
+  display: inline-block;
+  padding: 8px 0;
   color: var(--ink);
   text-decoration: underline;
   text-decoration-thickness: 2px;
@@ -942,7 +947,18 @@ code {
     height: 40px;
   }
 }
+@media (max-width: 400px) {
+  .field-num {
+    font-size: 26vw;
+  }
+}
 @media (max-width: 640px) {
+  .top {
+    transition: transform 0.2s ease;
+  }
+  .top.tucked {
+    transform: translateY(-100%);
+  }
   .top {
     gap: 6px 12px;
     padding-top: 10px;
@@ -991,9 +1007,96 @@ code {
   .defs dd {
     margin-bottom: 12px;
   }
+  /* The info card opens as a panel along the bottom of the screen. */
   .pop {
-    left: -120px;
-    top: 30px;
-    width: min(300px, 80vw);
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    top: auto;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    z-index: 30;
+    font-size: 15px;
+  }
+
+  /* Industry table becomes stacked rows: name and traffic share, then labelled 403 and 402 bars. */
+  .tbl {
+    min-width: 0;
+  }
+  .tr {
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "n name share"
+      ". b3 b3"
+      ". b2 b2";
+    gap: 6px 10px;
+    padding: 12px 0;
+  }
+  .tr > :nth-child(1) {
+    grid-area: n;
+  }
+  .tr > :nth-child(2) {
+    grid-area: name;
+  }
+  .tr > :nth-child(3) {
+    grid-area: b3;
+  }
+  .tr > :nth-child(4) {
+    grid-area: b2;
+  }
+  .tr > :nth-child(5) {
+    display: none;
+  }
+  .tr > :nth-child(6) {
+    grid-area: share;
+  }
+  .tr.head {
+    padding-bottom: 8px;
+  }
+  .tr.head > :nth-child(3),
+  .tr.head > :nth-child(4) {
+    display: none;
+  }
+  .tr.head > :nth-child(6) {
+    max-width: 96px;
+  }
+  .bar::before {
+    content: attr(data-k);
+    width: 28px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .detail {
+    padding: 12px 0 20px;
+  }
+  .trend-grid {
+    padding-right: 0;
+  }
+
+  /* Agents table becomes one block per agent with four labelled figures. */
+  .atbl {
+    min-width: 0;
+  }
+  .atr {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 16px;
+    padding: 14px 0;
+  }
+  .atr > :first-child {
+    grid-column: 1 / -1;
+    font-weight: 600 !important;
+  }
+  .atr .num {
+    text-align: left;
+  }
+  .atr .num::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--muted);
+  }
+  .atr.head {
+    display: none;
   }
 }

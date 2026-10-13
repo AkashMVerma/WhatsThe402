@@ -102,7 +102,7 @@ export function initIndustries(host: HTMLElement, d: Dataset, getIdx: () => numb
     const benchLabel = isMonth ? "All sites with an industry (est.)" : "All sites with an industry";
 
     const bar = (v: number, max: number, color: string) =>
-      `<span class="bar"><span class="bar-track"><span class="bar-fill" style="width:${Math.min(100, (v / max) * 100).toFixed(1)}%;background:${color}"></span></span><span class="bar-val">${pct(v)}</span></span>`;
+      `<span class="bar" data-k="${color.includes("red") ? "403" : "402"}"><span class="bar-track"><span class="bar-fill" style="width:${Math.min(100, (v / max) * 100).toFixed(1)}%;background:${color}"></span></span><span class="bar-val">${pct(v)}</span></span>`;
     const spark = (ind: Industry | null) => {
       // Benchmark row: the sites-with-an-industry series, falling back to all agent traffic for months it cannot be estimated.
       const vals = ind ? ind.monthly?.map((x) => x["403"]) : d.monthly.map((x) => x.industrySites?.["403"] ?? x.agents["403"]);
@@ -181,6 +181,11 @@ export function initIndustries(host: HTMLElement, d: Dataset, getIdx: () => numb
     );
     host.querySelectorAll<HTMLElement>(".trend-host").forEach(mountTrend);
   }
+
+  document.addEventListener("click", (e) => {
+    if ((e.target as Element).closest(".info")) return;
+    host.querySelectorAll('[data-info][aria-expanded="true"]').forEach((x) => x.setAttribute("aria-expanded", "false"));
+  });
 
   function detail(i: Industry): string {
     const trends = i.monthly?.length

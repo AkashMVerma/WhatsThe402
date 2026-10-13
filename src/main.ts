@@ -238,6 +238,24 @@ function main(d: Dataset, v: Verification | null) {
     URL.revokeObjectURL(a.href);
   });
 
+  // Phones: the header (brand, tabs, month) takes a big share of a small screen, so it
+  // slides away while scrolling down and comes back on any scroll up.
+  const top = document.querySelector<HTMLElement>(".top")!;
+  const phone = window.matchMedia("(max-width: 640px)");
+  let lastY = window.scrollY;
+  window.addEventListener(
+    "scroll",
+    () => {
+      const y = window.scrollY;
+      const tuck = phone.matches && y > top.offsetHeight && y > lastY + 4 && !top.contains(document.activeElement);
+      if (tuck) top.classList.add("tucked");
+      else if (y < lastY - 4 || y <= top.offsetHeight) top.classList.remove("tucked");
+      lastY = y;
+    },
+    { passive: true },
+  );
+  top.addEventListener("focusin", () => top.classList.remove("tucked"));
+
   fromHash();
   setMonth(state.idx);
 }
@@ -248,10 +266,10 @@ function renderAgents(d: Dataset) {
     .map(
       (b) => `<div class="atr">
         <span style="font-weight:500">${esc(b.name)}</span>
-        <span class="num">${pct(b.trafficShare)}</span>
-        <span class="num" style="color:var(--red);font-weight:600">${pct(b.rates?.["403"])}</span>
-        <span class="num" style="color:var(--blue);font-weight:600">${pct(b.rates?.["402"])}</span>
-        <span class="num">${pct(b.shareOfAgent402)}</span>
+        <span class="num" data-label="Share of agent traffic">${pct(b.trafficShare)}</span>
+        <span class="num" data-label="403 rate" style="color:var(--red);font-weight:600">${pct(b.rates?.["403"])}</span>
+        <span class="num" data-label="402 rate" style="color:var(--blue);font-weight:600">${pct(b.rates?.["402"])}</span>
+        <span class="num" data-label="Share of all agent 402s">${pct(b.shareOfAgent402)}</span>
       </div>`,
     )
     .join("");
