@@ -1,11 +1,12 @@
 import "./styles.css";
 import { dateLabel, esc, monthLabel, pct } from "./format";
+import { CAVEATS, EVENTS, REVIEW } from "./events";
 import { initIndustries } from "./industries";
+import { compareLine, refusedDemand, rising402, spark } from "./lines";
 import type { Dataset, Verification } from "./types";
 
 type View = "overview" | "industries" | "agents" | "method";
-// Method is hidden for now: its view still renders, but it has no tab and #method falls back to the overview.
-const VIEWS: View[] = ["overview", "industries", "agents"];
+const VIEWS: View[] = ["overview", "industries", "agents", "method"];
 const LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function monthLong(ym: string): string {
@@ -53,12 +54,20 @@ function main(d: Dataset, v: Verification | null) {
 
   // ---- Overview markup (built once, updated on month change) ----
   const ov = $("view-overview");
+  const rise = rising402(d);
+  const refused = refusedDemand(d);
+  const refMax = Math.max(...refused.map((i) => i.shareOfAgent403), 0.01);
   ov.innerHTML = `
+    <div class="edition">
+      <p class="edition-name"><b>The 402 Index</b>, <span data-month></span></p>
+      <p class="edition-note">A monthly measure of how websites answer AI agents, from Cloudflare Radar data. Same series, same method, every caveat shown. <a href="#method" data-view="method">How we measure</a></p>
+    </div>
     <section class="field" id="f403">
       <div>
         <p class="field-code">403 Forbidden</p>
         <p class="field-num" id="n403"></p>
         <p class="field-text">of AI agent requests were refused in <span data-month></span>.</p>
+        <p class="field-delta" id="d403"></p>
       </div>
       <div class="field-side">
         <span class="cap">403 rate by month. Highest ${pct(a403[peak(a403)])} in ${monthLabel(months[peak(a403)])}.</span>
@@ -71,6 +80,7 @@ function main(d: Dataset, v: Verification | null) {
         <p class="field-code">402 Payment Required</p>
         <p class="field-num" id="n402"></p>
         <p class="field-text">of AI agent requests were asked to pay in <span data-month></span>.</p>
+        <p class="field-delta" id="d402"></p>
       </div>
       <div class="field-side">
         <span class="cap">402 rate by month. Highest ${pct(a402[peak(a402)])} in ${monthLabel(months[peak(a402)])}.</span>
@@ -81,11 +91,33 @@ function main(d: Dataset, v: Verification | null) {
     <section class="thousand">
       <div>
         <h2>Out of every 1,000 agent requests in <span data-month></span></h2>
-        <p class="count"><span class="swatch" style="background:var(--red)"></span><b id="c403"></b> were refused</p>
-        <p class="count"><span class="swatch" style="background:var(--blue)"></span><b id="c402"></b> were asked to pay</p>
-        <p class="count"><span class="swatch" style="background:var(--other)"></span><b id="cRest"></b> got any other answer</p>
+        <p class="count"><span class="swatch" style="background:var(--red)"></span><b id="c403"></b><span>were refused<em>Demand a price could open</em></span></p>
+        <p class="count"><span class="swatch" style="background:var(--blue)"></span><b id="c402"></b><span>were asked to pay<em>Already priced</em></span></p>
+        <p class="count"><span class="swatch" style="background:var(--other)"></span><b id="cRest"></b><span>got any other answer</span></p>
+        <p class="thousand-note">We count each refusal as potential market: a request the website could price instead of block.</p>
       </div>
       <div class="dots" id="dots" role="img"></div>
+    </section>
+    <section class="market">
+      ${
+        rise && rise.rows.length
+          ? `<div class="market-col">
+        <h2>Where asks to pay are rising</h2>
+        <p class="small">Agent 402 rate, ${rise.before} against ${rise.after}</p>
+        <ol class="mlist">${rise.rows
+          .map((r) => `<li><span class="m-name">${esc(r.ind.name)}</span>${spark(r.series, "var(--blue)")}<span class="m-val">${pct(r.before)} <span aria-hidden="true">&rarr;</span><span class="sr"> to </span> <b>${pct(r.after)}</b></span></li>`)
+          .join("")}</ol>
+      </div>`
+          : ""
+      }
+      <div class="market-col">
+        <h2>Where refused demand is largest</h2>
+        <p class="small">Share of all refused agent requests, ${esc(d.meta.windows.ytd.label)}</p>
+        <ol class="mlist">${refused
+          .map((i) => `<li><span class="m-name">${esc(i.name)}</span><span class="m-bar"><span style="width:${((i.shareOfAgent403 / refMax) * 100).toFixed(1)}%"></span></span><span class="m-val"><b>${pct(i.shareOfAgent403)}</b></span></li>`)
+          .join("")}</ol>
+      </div>
+      <a class="m-more" href="#industries" data-view="industries">Every industry</a>
     </section>`;
 
   const cells403 = $("cells403");
@@ -157,6 +189,8 @@ function main(d: Dataset, v: Verification | null) {
     f3.style.color = "#111111";
     f2.style.background = blue(a402[k]);
     f2.style.color = t2(a402[k]) > 0.5 ? "#FFFFFF" : "#111111";
+    $("d403").textContent = compareLine(months, a403, k);
+    $("d402").textContent = compareLine(months, a402, k, { peakFirst: true });
     $("n403").textContent = pct(a403[k]);
     $("n402").textContent = pct(a402[k]);
     cells403.querySelectorAll("button").forEach((b, i) => b.setAttribute("aria-pressed", String(i === k)));
@@ -212,7 +246,7 @@ function main(d: Dataset, v: Verification | null) {
     const url = new URL(location.href);
     url.hash = "";
     url.searchParams.set("m", m);
-    const text = `WhatsThe402, Agent Access Index, ${monthLong(m)}. Data from Cloudflare Radar. Accessed ${dateLabel(new Date().toISOString().slice(0, 10))}. ${url.toString()}`;
+    const text = `WhatsThe402, The 402 Index, ${monthLong(m)}. Data from Cloudflare Radar (CC BY-NC 4.0). Accessed ${dateLabel(new Date().toISOString().slice(0, 10))}. ${url.toString()}`;
     const btn = $("cite");
     try {
       await navigator.clipboard.writeText(text);
@@ -308,7 +342,8 @@ function renderMethod(d: Dataset, v: Verification | null) {
   gaps.push("Monthly figures by industry cover the 30 industries with the most agent traffic.");
   gaps.push("Radar can revise recent months. We re-pull every month each day, so revisions show up within a day.");
   $("view-method").innerHTML = `<div class="page">
-    <h1>Method</h1>
+    <h1>How we measure</h1>
+    <p class="sub">The 402 Index is one fixed series, rebuilt from the Cloudflare Radar API every day and checked figure by figure. A month joins the index once it is complete.</p>
     <dl class="defs">
       <dt>Agents</dt><dd>Bots that fetch a page because a person asked, such as ChatGPT-User and Claude-User. Cloudflare calls this crawl purpose User Action.</dd>
       <dt>403 rate</dt><dd>Of the agent requests in a month or industry, the share answered with 403 Forbidden.</dd>
@@ -320,6 +355,13 @@ function renderMethod(d: Dataset, v: Verification | null) {
       <dt>Updates</dt><dd>Pulled daily from the Cloudflare Radar API. A month appears once it is complete. Last updated ${dateLabel(m.updated)}.</dd>
     </dl>
     ${checks}
+    <h2>Events that can move the series</h2>
+    <ul class="facts-list">${EVENTS.map((e) => `<li><b>${esc(e.date)}.</b> ${esc(e.text)} <a href="${e.url}" rel="noopener">Source</a></li>`).join("")}</ul>
+    ${REVIEW.length ? `<h2>Under review</h2><ul class="facts-list">${REVIEW.map((r) => `<li>${esc(r.text)}</li>`).join("")}</ul>` : ""}
+    <h2>What this data can't tell you</h2>
+    <ul class="facts-list">${CAVEATS.map(([k, t]) => `<li><b>${esc(k)}.</b> ${esc(t)}</li>`).join("")}</ul>
+    <h2>Licence</h2>
+    <p class="sub">Cloudflare publishes Radar data under <a href="https://creativecommons.org/licenses/by-nc/4.0/" rel="noopener">CC BY-NC 4.0</a>. Our figures are derived from it and carry the same licence. Please credit Cloudflare Radar and WhatsThe402.</p>
     <h2>Sources</h2>
     <ul class="facts-list">${m.sources.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
     ${m.radarNotes.length ? `<h2>Cloudflare's notes on this period</h2><ul class="facts-list">${m.radarNotes.map((n) => `<li>${esc(n.description)}${n.start ? ` (${dateLabel(n.start)}${n.end && n.end !== n.start ? ` to ${dateLabel(n.end)}` : ""})` : ""}</li>`).join("")}</ul>` : ""}
@@ -329,8 +371,15 @@ function renderMethod(d: Dataset, v: Verification | null) {
 }
 
 load()
-  .then(({ d, v }) => main(d, v))
+  .then(({ d, v }) => {
+    main(d, v);
+    // The build puts a plain-HTML summary in the page for crawlers and agents that
+    // don't run JavaScript; once the app has rendered it is no longer needed.
+    document.getElementById("static-summary")?.remove();
+  })
   .catch((err) => {
+    // Show the static summary instead of an empty page.
+    document.documentElement.classList.remove("js");
     const el = $("load-error");
     el.textContent = `The data file could not be loaded (${(err as Error).message}). Reload the page to try again.`;
     el.hidden = false;

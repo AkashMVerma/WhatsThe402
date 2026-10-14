@@ -113,3 +113,13 @@ Fixes carried over or added:
 3. ICP layer (private): scores industries on 402 adoption, 403 friction, agent traffic share
    and trend. Needs a private host (a second private repo or a password-protected page).
 4. Investor exports: chart PNG/CSV export and a narrative page.
+
+## Discoverability
+
+`seo.plugin.ts` runs at build time and reads `public/data/index.json`, so everything below matches the data being shipped:
+
+- page metadata (description, canonical, Open Graph, Twitter) and schema.org `Dataset` JSON-LD
+- a plain-HTML summary inside `<main>` for crawlers and agents that don't run JavaScript (hidden once the app renders)
+- `llms.txt`, `sitemap.xml`, `feed.xml` (one entry per monthly edition) and `data/whatsthe402-monthly.csv`
+
+`public/og.png` is the link-preview image. A `robots.txt` only takes effect at a domain root, so it needs a custom domain or a user site to be useful.
