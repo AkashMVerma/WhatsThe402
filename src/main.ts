@@ -1,11 +1,13 @@
 import "./styles.css";
 import { dateLabel, esc, monthLabel, pct } from "./format";
 import { initIndustries } from "./industries";
+import { renderRead } from "./read";
+import { initStory, outlookHtml } from "./story";
 import type { Dataset, Verification } from "./types";
 
-type View = "overview" | "industries" | "agents" | "method";
+type View = "overview" | "industries" | "agents" | "read" | "method";
 // Method is hidden for now: its view still renders, but it has no tab and #method falls back to the overview.
-const VIEWS: View[] = ["overview", "industries", "agents"];
+const VIEWS: View[] = ["overview", "industries", "agents", "read"];
 const LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export function monthLong(ym: string): string {
@@ -54,9 +56,14 @@ function main(d: Dataset, v: Verification | null) {
   // ---- Overview markup (built once, updated on month change) ----
   const ov = $("view-overview");
   ov.innerHTML = `
+    <section class="intro">
+      <h1>How often websites refuse AI agents, or ask them to pay</h1>
+      <p>When an AI assistant opens a web page for someone, the website can serve the page, refuse it, or ask to be paid first. A refusal comes back as an HTTP 403 (Forbidden) and a request to pay as an HTTP 402 (Payment Required). We track both, month by month and industry by industry, using Cloudflare Radar data.</p>
+    </section>
     <section class="field" id="f403">
       <div>
         <p class="field-code">403 Forbidden</p>
+        <p class="field-plain">The website said no.</p>
         <p class="field-num" id="n403"></p>
         <p class="field-text">of AI agent requests were refused in <span data-month></span>.</p>
       </div>
@@ -69,6 +76,7 @@ function main(d: Dataset, v: Verification | null) {
     <section class="field" id="f402">
       <div>
         <p class="field-code">402 Payment Required</p>
+        <p class="field-plain">The website asked to be paid first.</p>
         <p class="field-num" id="n402"></p>
         <p class="field-text">of AI agent requests were asked to pay in <span data-month></span>.</p>
       </div>
@@ -86,7 +94,9 @@ function main(d: Dataset, v: Verification | null) {
         <p class="count"><span class="swatch" style="background:var(--other)"></span><b id="cRest"></b> got any other answer</p>
       </div>
       <div class="dots" id="dots" role="img"></div>
-    </section>`;
+    </section>
+    <div class="story" id="story"></div>
+    ${outlookHtml(d)}`;
 
   const cells403 = $("cells403");
   const cells402 = $("cells402");
@@ -113,6 +123,8 @@ function main(d: Dataset, v: Verification | null) {
   // ---- Static views ----
   renderAgents(d);
   renderMethod(d, v);
+  renderRead($("view-read"), d);
+  const story = initStory($("story"), d, () => state.idx);
   const industries = initIndustries($("view-industries"), d, () => state.idx);
 
   // ---- Month control ----
@@ -171,6 +183,7 @@ function main(d: Dataset, v: Verification | null) {
     dots.setAttribute("aria-label", `Of 1,000 agent requests in ${monthLong(m)}, ${n3} refused and ${n2} asked to pay`);
 
     industries.update();
+    story.update();
     const url = new URL(location.href);
     if (k === months.length - 1) url.searchParams.delete("m");
     else url.searchParams.set("m", m);

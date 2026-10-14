@@ -1,4 +1,4 @@
-import { scaleLinear, scalePoint } from "d3-scale";
+import { scaleLinear, scaleLog, scalePoint } from "d3-scale";
 import { line } from "d3-shape";
 import { esc, monthLabel, pct } from "./format";
 
@@ -20,6 +20,12 @@ export interface LineChartOpts {
   ariaLabel: string;
   /** Shorter chart for use inside table rows. */
   compact?: boolean;
+  /** Numbered markers for dated events (index into months). */
+  events?: { index: number; n: number }[];
+  /** Months to shade as "under review". */
+  review?: number[];
+  /** Month to ring on the first series (the month picked at the top). */
+  focus?: number;
 }
 
 /** A rounded axis maximum and 3-5 evenly spaced ticks covering `max`. */
@@ -36,8 +42,11 @@ export function niceScale(max: number): { yMax: number; yTicks: number[] } {
  * Monthly line chart with end labels, hairline grid and a crosshair tooltip.
  * Redraws at the container's real width so text never scales.
  */
-export function lineChart(host: HTMLElement, opts: LineChartOpts): void {
+let uidSeq = 0;
+
+export function lineChart(host: HTMLElement, opts: LineChartOpts): () => void {
   host.classList.add("chart");
+  const uid = ++uidSeq;
   const tip = document.createElement("div");
   tip.className = "tip";
   tip.hidden = true;
@@ -78,6 +87,20 @@ export function lineChart(host: HTMLElement, opts: LineChartOpts): void {
       g += `<text x="${x(mo)}" y="${H - 6}" class="tick" text-anchor="${anchor}">${label}</text>`;
     });
 
+    const step = opts.months.length > 1 ? x(opts.months[1])! - x(opts.months[0])! : 20;
+    if (opts.review?.length) {
+      g += `<defs><pattern id="hatch-${uid}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" class="hatch"/></pattern></defs>`;
+      for (const i of opts.review) {
+        const cx = x(opts.months[i])!;
+        g += `<rect x="${cx - step / 2}" y="${m.top}" width="${step}" height="${H - m.bottom - m.top}" fill="url(#hatch-${uid})" class="review"/>`;
+      }
+    }
+    for (const e of opts.events ?? []) {
+      const ex = x(opts.months[e.index])!;
+      g += `<line x1="${ex}" x2="${ex}" y1="${m.top + 9}" y2="${H - m.bottom}" class="event-rule"/>`;
+      g += `<circle cx="${ex}" cy="${m.top}" r="8" class="event-dot"/><text x="${ex}" y="${m.top}" class="event-n" text-anchor="middle" dominant-baseline="central">${e.n}</text>`;
+    }
+
     if (opts.annotation) {
       const a = opts.annotation;
       const ax = x(opts.months[a.index])!;
@@ -104,6 +127,10 @@ export function lineChart(host: HTMLElement, opts: LineChartOpts): void {
       const ex = x(opts.months[last])!;
       g += `<circle cx="${ex}" cy="${y(e.s.values[last])}" r="3.5" style="fill:${e.s.color}" class="end"/>`;
       g += `<text x="${ex + 8}" y="${e.y}" class="end-label" dominant-baseline="middle">${esc(e.s.label)}</text>`;
+    }
+    if (opts.focus != null && opts.focus !== last && opts.series[0]) {
+      const fx = x(opts.months[opts.focus])!;
+      g += `<circle cx="${fx}" cy="${y(opts.series[0].values[opts.focus])}" r="5.5" class="focus" style="stroke:${opts.series[0].color}"/>`;
     }
     g += `<g class="cross" visibility="hidden"><line class="cross-rule" y1="${m.top}" y2="${H - m.bottom}"/>`;
     for (const s of opts.series) g += `<circle r="4.5" class="cross-dot" style="fill:${s.color}"/>`;
@@ -170,6 +197,112 @@ export function lineChart(host: HTMLElement, opts: LineChartOpts): void {
     if (active >= 0) show(active);
   };
 
+  draw();
+  let lastW = host.clientWidth;
+  new ResizeObserver(() => {
+    if (host.clientWidth !== lastW) {
+      lastW = host.clientWidth;
+      draw();
+    }
+  }).observe(host);
+  // Callers mutate opts (e.g. focus) and call this to redraw.
+  return draw;
+}
+
+export interface ScatterPoint {
+  name: string;
+  x: number;
+  y: number;
+  label?: boolean;
+  /** Keep the label on narrow screens too (others are dropped to avoid overlaps). */
+  keyLabel?: boolean;
+}
+
+/**
+ * Scatter of agent traffic share (log x) against 403 rate (y, 0-100), with a
+ * horizontal benchmark line. Selected points carry direct labels; every point
+ * has a hover/tap tooltip.
+ */
+export function scatterChart(
+  host: HTMLElement,
+  opts: { points: ScatterPoint[]; bench: number; benchLabel: string; xLabel: string; yLabel: string; ariaLabel: string },
+): void {
+  host.classList.add("chart");
+  const tip = document.createElement("div");
+  tip.className = "tip";
+  tip.hidden = true;
+  const draw = () => {
+    const W = Math.max(280, host.clientWidth);
+    const narrow = W < 460;
+    const H = narrow ? 300 : 340;
+    const m = { top: 16, right: 16, bottom: 40, left: 44 };
+    const xs = opts.points.map((p) => p.x);
+    const lo = Math.pow(10, Math.floor(Math.log10(Math.min(...xs))));
+    const hi = Math.pow(10, Math.ceil(Math.log10(Math.max(...xs))));
+    const x = scaleLog().domain([lo, hi]).range([m.left, W - m.right]);
+    const y = scaleLinear().domain([0, 100]).range([H - m.bottom, m.top]);
+    let g = "";
+    for (const t of [0, 25, 50, 75, 100]) {
+      g += `<line x1="${m.left}" x2="${W - m.right}" y1="${y(t)}" y2="${y(t)}" class="${t === 0 ? "axis" : "grid"}"/>`;
+      g += `<text x="${m.left - 8}" y="${y(t)}" class="tick" text-anchor="end" dominant-baseline="middle">${t}%</text>`;
+    }
+    for (let t = lo; t <= hi + 1e-9; t *= 10) {
+      g += `<text x="${x(t)}" y="${H - m.bottom + 16}" class="tick" text-anchor="middle">${t >= 1 ? t : t.toFixed(String(t).split(".")[1]?.length ?? 1)}%</text>`;
+    }
+    g += `<text x="${W - m.right}" y="${H - 4}" class="tick" text-anchor="end">${esc(opts.xLabel)}</text>`;
+    const by = y(opts.bench);
+    g += `<line x1="${m.left}" x2="${W - m.right}" y1="${by}" y2="${by}" class="bench-rule"/>`;
+    opts.points.forEach((p, i) => {
+      g += `<circle cx="${x(p.x)}" cy="${y(p.y)}" r="5" class="pt${p.label && (!narrow || p.keyLabel) ? " lab" : ""}" data-i="${i}"/>`;
+    });
+    // Direct labels: right of the dot if it fits, else left, else above it (narrow screens).
+    for (const p of opts.points.filter((q) => q.label && (!narrow || q.keyLabel))) {
+      const px = x(p.x);
+      const py = y(p.y);
+      const w = p.name.length * 6.6;
+      let lx = px + 9;
+      let ly = py;
+      let anchor = "start";
+      if (px + 9 + w > W - 2) {
+        if (px - 9 - w >= 2) {
+          lx = px - 9;
+          anchor = "end";
+        } else {
+          lx = Math.max(2, Math.min(W - 2 - w, px - w / 2));
+          ly = py - 13;
+        }
+      }
+      g += `<text x="${lx}" y="${ly}" class="pt-label" text-anchor="${anchor}" dominant-baseline="middle">${esc(p.name)}</text>`;
+    }
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.setAttribute("width", String(W));
+    svg.setAttribute("height", String(H));
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", opts.ariaLabel);
+    svg.innerHTML = g;
+    host.replaceChildren(svg, tip);
+    const show = (el: SVGCircleElement | null) => {
+      svg.querySelectorAll(".pt.on").forEach((c) => c.classList.remove("on"));
+      if (!el) {
+        tip.hidden = true;
+        return;
+      }
+      el.classList.add("on");
+      const p = opts.points[+el.dataset.i!];
+      tip.innerHTML = `<div class="tip-title">${esc(p.name)}</div><div class="tip-row">${esc(opts.xLabel)}<b>${pct(p.x)}</b></div><div class="tip-row">${esc(opts.yLabel)}<b>${pct(p.y)}</b></div>`;
+      tip.hidden = false;
+      const cx = x(p.x);
+      const tw = tip.offsetWidth;
+      tip.style.left = `${Math.max(0, Math.min(W - tw, cx + 12 + tw > W ? cx - 12 - tw : cx + 12))}px`;
+      tip.style.top = `${Math.max(0, y(p.y) - 20)}px`;
+    };
+    svg.querySelectorAll<SVGCircleElement>(".pt").forEach((c) => {
+      c.addEventListener("pointerenter", () => show(c));
+      c.addEventListener("click", () => show(c));
+    });
+    svg.addEventListener("pointerleave", () => show(null));
+  };
   draw();
   let lastW = host.clientWidth;
   new ResizeObserver(() => {
