@@ -40,5 +40,7 @@ export const CAVEATS = [
   ["Who counts as an agent", "Cloudflare decides which bots act for a person, and its list includes bots such as TikTokSpider."],
   ["Whether anyone paid", "A 402 is a request to pay. We can't see payments, and for an agent that can't pay, a 402 works like a refusal."],
   ["Why", "We see what websites answered, not their reasons. Cloudflare's default settings, changes in which agents are active, and revisions to Radar's data can all move the numbers."],
+  ["Cloudflare's labels", "Which bots count as agents and which industry a website belongs to are Cloudflare's classifications. We can't check them site by site."],
+  ["Revisions", "Radar can revise recent months. We rebuild the whole series every day, so a published figure can change."],
   ["Robots.txt", "Bots that follow robots.txt never ask for pages they're told to skip, so they don't show up as refused."],
 ];

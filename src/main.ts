@@ -2,7 +2,8 @@ import "./styles.css";
 import { dateLabel, esc, monthLabel, pct } from "./format";
 import { CAVEATS, EVENTS, REVIEW } from "./events";
 import { initIndustries } from "./industries";
-import { compareLine, refusedDemand, rising402, spark } from "./lines";
+import { CONTACT_EMAIL } from "./config";
+import { agentFindings, compareLine, refusedDemand, rising402, spark } from "./lines";
 import type { Dataset, Verification } from "./types";
 
 type View = "overview" | "industries" | "agents" | "method";
@@ -57,16 +58,24 @@ function main(d: Dataset, v: Verification | null) {
   const rise = rising402(d);
   const refused = refusedDemand(d);
   const refMax = Math.max(...refused.map((i) => i.shareOfAgent403), 0.01);
+  const af = agentFindings(d);
+  const afMax = Math.max(...af.rows.map((r) => r.rate), 1);
   ov.innerHTML = `
-    <div class="edition">
+    <div class="edition reveal">
       <p class="edition-name"><b>The 402 Index</b>, <span data-month></span></p>
-      <p class="edition-note">A monthly measure of how websites answer AI agents, from Cloudflare Radar data. Same series, same method, every caveat shown. <a href="#method" data-view="method">How we measure</a></p>
+      <p class="edition-note">A monthly measure of how websites answer AI agents. The figures are estimates from the requests Cloudflare sees, not every AI agent request on the web. <a href="#method" data-view="method">How we measure</a></p>
+    </div>
+    <div class="kinds reveal" aria-label="Who we count">
+      <p><b>AI bots</b>Any automated visitor run by an AI company.</p>
+      <p><b>Crawlers</b>Bots that collect pages in bulk, mostly to train models or build search indexes.</p>
+      <p class="kinds-us"><b>AI agents</b>Bots fetching a page right now because a person asked, like ChatGPT-User. This index counts these.</p>
     </div>
     <section class="field" id="f403">
       <div>
+        <p class="q-label">How often are AI agents turned away?</p>
         <p class="field-code">403 Forbidden</p>
         <p class="field-num" id="n403"></p>
-        <p class="field-text">of AI agent requests were refused in <span data-month></span>.</p>
+        <p class="field-text">of AI agent requests seen by Cloudflare were refused in <span data-month></span>.</p>
         <p class="field-delta" id="d403"></p>
       </div>
       <div class="field-side">
@@ -77,9 +86,10 @@ function main(d: Dataset, v: Verification | null) {
     </section>
     <section class="field" id="f402">
       <div>
+        <p class="q-label">How often are they asked to pay?</p>
         <p class="field-code">402 Payment Required</p>
         <p class="field-num" id="n402"></p>
-        <p class="field-text">of AI agent requests were asked to pay in <span data-month></span>.</p>
+        <p class="field-text">of AI agent requests seen by Cloudflare were asked to pay in <span data-month></span>.</p>
         <p class="field-delta" id="d402"></p>
       </div>
       <div class="field-side">
@@ -88,8 +98,9 @@ function main(d: Dataset, v: Verification | null) {
         <div class="cell-axis"><span>${monthLabel(months[0])}</span><span>${monthLabel(months[months.length - 1])}</span></div>
       </div>
     </section>
-    <section class="thousand">
+    <section class="thousand reveal">
       <div>
+        <p class="q-label">What happens to 1,000 agent requests?</p>
         <h2>Out of every 1,000 agent requests in <span data-month></span></h2>
         <p class="count"><span class="swatch" style="background:var(--red)"></span><b id="c403"></b><span>were refused<em>Demand a price could open</em></span></p>
         <p class="count"><span class="swatch" style="background:var(--blue)"></span><b id="c402"></b><span>were asked to pay<em>Already priced</em></span></p>
@@ -98,7 +109,21 @@ function main(d: Dataset, v: Verification | null) {
       </div>
       <div class="dots" id="dots" role="img"></div>
     </section>
-    <section class="market">
+    <section class="who reveal">
+      <div>
+        <p class="q-label">Which agents get turned away?</p>
+        ${af.lines.map((l) => `<p class="who-line">${esc(l)}</p>`).join("")}
+      </div>
+      <div>
+        <p class="small">Share of each agent's requests refused, ${esc(d.meta.windows.ytd.label)}</p>
+        <ol class="mlist">${af.rows
+          .map((r) => `<li><span class="m-name">${esc(r.name)}</span><span class="m-bar"><span style="width:${((r.rate / afMax) * 100).toFixed(1)}%"></span></span><span class="m-val"><b>${pct(r.rate)}</b></span></li>`)
+          .join("")}</ol>
+        <a class="m-more" href="#agents" data-view="agents">Every agent</a>
+      </div>
+    </section>
+    <section class="market reveal">
+      <p class="q-label market-q">Where is the opportunity?</p>
       ${
         rise && rise.rows.length
           ? `<div class="market-col">
@@ -118,7 +143,19 @@ function main(d: Dataset, v: Verification | null) {
           .join("")}</ol>
       </div>
       <a class="m-more" href="#industries" data-view="industries">Every industry</a>
-    </section>`;
+    </section>
+    <p class="limits-line reveal">Shares of requests, not counts. Only websites on Cloudflare. A 402 is a request to pay, not proof of payment. <a href="#method" data-view="method">Every caveat</a></p>
+    ${
+      CONTACT_EMAIL
+        ? `<section class="cta reveal">
+      <div>
+        <h2>Selling to agents, or building them?</h2>
+        <p>4Mica builds payment infrastructure for AI agents. Tell us what you're seeing.</p>
+      </div>
+      <a class="btn cta-btn" href="mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("The 402 Index")}">Talk to 4Mica</a>
+    </section>`
+        : ""
+    }`;
 
   const cells403 = $("cells403");
   const cells402 = $("cells402");
@@ -140,6 +177,64 @@ function main(d: Dataset, v: Verification | null) {
     const s = document.createElement("span");
     dots.appendChild(s);
     dotEls.push(s);
+  }
+
+  // ---- Motion (subtle; skipped when the reader prefers reduced motion) ----
+  const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const shown = new WeakMap<HTMLElement, number>();
+  // Count a big number from its last value to the new one.
+  function countTo(el: HTMLElement, to: number) {
+    const from = shown.get(el) ?? 0;
+    shown.set(el, to);
+    if (calm || from === to) {
+      el.textContent = pct(to);
+      return;
+    }
+    const t0 = performance.now();
+    const step = (t: number) => {
+      const p = Math.min(1, (t - t0) / 650);
+      const e = 1 - Math.pow(1 - p, 3);
+      el.textContent = pct(p < 1 ? from + (to - from) * e : to);
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  // Fill the 1,000-request grid; the first time it scrolls into view it fills in order.
+  let dotsSeen = calm;
+  let dotTarget = [0, 0];
+  function paintDots(n3: number, n2: number) {
+    dotTarget = [n3, n2];
+    if (!dotsSeen) return;
+    dotEls.forEach((s, i) => (s.className = i < n3 ? "r" : i < n3 + n2 ? "b" : ""));
+  }
+  function fillDots() {
+    const [n3, n2] = dotTarget;
+    const t0 = performance.now();
+    const step = (t: number) => {
+      const upto = Math.min(1000, Math.round(((t - t0) / 900) * 1000));
+      for (let i = 0; i < upto; i++) dotEls[i].className = i < n3 ? "r" : i < n3 + n2 ? "b" : "";
+      if (upto < 1000 && !dotsSeen) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    setTimeout(() => {
+      dotsSeen = true;
+      paintDots(dotTarget[0], dotTarget[1]);
+    }, 950);
+  }
+  if (calm) document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in"));
+  else {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          e.target.classList.add("in");
+          io.unobserve(e.target);
+          if (e.target.classList.contains("thousand")) fillDots();
+        }
+      },
+      { threshold: 0.15 },
+    );
+    document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
   }
 
   // ---- Static views ----
@@ -191,8 +286,8 @@ function main(d: Dataset, v: Verification | null) {
     f2.style.color = t2(a402[k]) > 0.5 ? "#FFFFFF" : "#111111";
     $("d403").textContent = compareLine(months, a403, k);
     $("d402").textContent = compareLine(months, a402, k, { peakFirst: true });
-    $("n403").textContent = pct(a403[k]);
-    $("n402").textContent = pct(a402[k]);
+    countTo($("n403"), a403[k]);
+    countTo($("n402"), a402[k]);
     cells403.querySelectorAll("button").forEach((b, i) => b.setAttribute("aria-pressed", String(i === k)));
     cells402.querySelectorAll("button").forEach((b, i) => b.setAttribute("aria-pressed", String(i === k)));
 
@@ -201,7 +296,7 @@ function main(d: Dataset, v: Verification | null) {
     $("c403").textContent = String(n3);
     $("c402").textContent = n2 === 0 && a402[k] > 0 ? "<1" : String(n2);
     $("cRest").textContent = String(1000 - n3 - n2);
-    dotEls.forEach((s, i) => (s.className = i < n3 ? "r" : i < n3 + n2 ? "b" : ""));
+    paintDots(n3, n2);
     dots.setAttribute("aria-label", `Of 1,000 agent requests in ${monthLong(m)}, ${n3} refused and ${n2} asked to pay`);
 
     industries.update();
@@ -345,7 +440,10 @@ function renderMethod(d: Dataset, v: Verification | null) {
     <h1>How we measure</h1>
     <p class="sub">The 402 Index is one fixed series, rebuilt from the Cloudflare Radar API every day and checked figure by figure. A month joins the index once it is complete.</p>
     <dl class="defs">
-      <dt>Agents</dt><dd>Bots that fetch a page because a person asked, such as ChatGPT-User and Claude-User. Cloudflare calls this crawl purpose User Action.</dd>
+      <dt>AI bots</dt><dd>Any automated visitor run by an AI company. Cloudflare sorts them by what they are for: training, search, user action (agents), mixed purpose or undeclared.</dd>
+      <dt>Crawlers</dt><dd>Bots that collect pages in bulk with no person waiting, mostly to train models (training crawlers) or build search indexes.</dd>
+      <dt>Agents</dt><dd>Bots that fetch a page because a person asked, such as ChatGPT-User and Claude-User. Cloudflare calls this crawl purpose User Action. Every headline figure on this site is about agents.</dd>
+      <dt>Estimates</dt><dd>Every figure is a share of the requests Cloudflare sees on websites that use it, as reported by Cloudflare Radar. It is not a count, and it does not cover websites that don't use Cloudflare.</dd>
       <dt>403 rate</dt><dd>Of the agent requests in a month or industry, the share answered with 403 Forbidden.</dd>
       <dt>402 rate</dt><dd>The same for 402 Payment Required.</dd>
       <dt>Out of 1,000</dt><dd>The month's 403 and 402 rates times 1,000, rounded. Fewer than one in 1,000 shows as &lt;1.</dd>
