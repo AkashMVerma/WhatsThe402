@@ -3,22 +3,44 @@
 import { monthLabel, pct } from "./format";
 import type { Dataset, Industry } from "./types";
 
-/** One line comparing month k with a year earlier (or with the first month). */
+const LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+/** "August" within the same year as `ref`, otherwise "December 2025". */
+const nameOf = (ym: string, ref: string) => (ym.slice(0, 4) === ref.slice(0, 4) ? LONG[+ym.slice(5) - 1] : `${LONG[+ym.slice(5) - 1]} ${ym.slice(0, 4)}`);
+
+/**
+ * One line under a headline number: the change from the previous month, then
+ * either the year-on-year change or, for a series well below its peak, the peak.
+ */
 export function compareLine(months: string[], vals: number[], k: number, opts: { peakFirst?: boolean } = {}): string {
+  if (k === 0) return "First month in the series.";
+  const cur = months[k];
+  const v = vals[k];
+  const pv = vals[k - 1];
+  const prevName = nameOf(months[k - 1], cur);
+  const rm = v / (pv || Number.EPSILON);
+  const dirM = rm >= 1.1 ? 1 : rm > 0.9 ? 0 : -1;
+  const mom = dirM > 0 ? `Up from ${pct(pv)} in ${prevName}` : dirM < 0 ? `Down from ${pct(pv)} in ${prevName}` : `About the same as ${prevName} (${pct(pv)})`;
+
   const p = vals.indexOf(Math.max(...vals));
-  // For a series that has fallen well below its peak, the peak is the useful comparison.
-  if (opts.peakFirst && k > p && vals[k] < vals[p] * 0.6) {
-    return `Down from ${pct(vals[p])} at its peak in ${monthLabel(months[p])}.`;
+  if (opts.peakFirst && k > p && p !== k - 1 && v < vals[p] * 0.6) {
+    return `${mom}, and well below its ${nameOf(months[p], cur)} peak of ${pct(vals[p])}.`;
   }
-  if (k === 0) return `First month in the series.`;
-  const j = k >= 12 ? k - 12 : 0;
-  const r = vals[k] / (vals[j] || Number.EPSILON);
-  const then = monthLabel(months[j]);
-  if (r >= 2.75) return `About ${Math.round(r)} times the rate of ${then}.`;
-  if (r >= 1.75) return `About twice the rate of ${then}.`;
-  if (r >= 1.1) return `Up from ${pct(vals[j])} in ${then}.`;
-  if (r > 0.9) return `About the same as ${then} (${pct(vals[j])}).`;
-  return `Down from ${pct(vals[j])} in ${then}.`;
+  if (k < 12) return `${mom}.`;
+  const y = vals[k - 12];
+  const r = v / (y || Number.EPSILON);
+  const dirY = r >= 1.1 ? 1 : r > 0.9 ? 0 : -1;
+  const yoy =
+    r >= 2.75
+      ? `about ${Math.round(r)} times the rate a year earlier`
+      : r >= 1.75
+        ? "about twice the rate a year earlier"
+        : dirY > 0
+          ? `up from ${pct(y)} a year earlier`
+          : dirY < 0
+            ? `down from ${pct(y)} a year earlier`
+            : "about the same as a year earlier";
+  const join = dirM !== 0 && dirY !== 0 && dirM !== dirY ? ", but " : ", and ";
+  return `${mom}${join}${yoy}.`;
 }
 
 export interface Mover {

@@ -880,6 +880,16 @@ code {
 .edition-name b {
   font-weight: 800;
 }
+.edition-latest {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-family: var(--body);
+  font-size: 13px;
+  color: var(--muted);
+  vertical-align: 3px;
+}
 .edition-note {
   font-size: 14px;
   color: var(--ink-2);

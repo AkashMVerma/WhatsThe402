@@ -62,7 +62,7 @@ function main(d: Dataset, v: Verification | null) {
   const afMax = Math.max(...af.rows.map((r) => r.rate), 1);
   ov.innerHTML = `
     <div class="edition reveal">
-      <p class="edition-name"><b>The 402 Index</b>, <span data-month></span></p>
+      <p class="edition-name"><b>The 402 Index</b>, <span data-month></span> <span class="edition-latest" id="ed-latest">latest complete month</span></p>
       <p class="edition-note">A monthly measure of how websites answer AI agents. The figures are estimates from the requests Cloudflare sees, not every AI agent request on the web. <a href="#method" data-view="method">How we measure</a></p>
     </div>
     <div class="kinds reveal" aria-label="Who we count">
@@ -284,6 +284,7 @@ function main(d: Dataset, v: Verification | null) {
     f3.style.color = "#111111";
     f2.style.background = blue(a402[k]);
     f2.style.color = t2(a402[k]) > 0.5 ? "#FFFFFF" : "#111111";
+    $("ed-latest").hidden = k !== months.length - 1;
     $("d403").textContent = compareLine(months, a403, k);
     $("d402").textContent = compareLine(months, a402, k, { peakFirst: true });
     countTo($("n403"), a403[k]);
