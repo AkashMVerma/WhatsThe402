@@ -1,0 +1,15 @@
+# Saved versions
+
+Rollback points for the live site. Each row is the exact commit that was live at
+that time. Data commits keep landing daily, so to roll back the site's code while
+keeping the latest data, restore only the code paths from the saved commit:
+
+```
+git checkout <commit> -- index.html src seo.plugin.ts vite.config.ts public/favicon.svg public/favicon-32.png public/apple-touch-icon.png public/og.png
+git commit -m "Roll back site code to <name>"
+git push
+```
+
+| Name | Saved (UTC) | Commit | What it is |
+|---|---|---|---|
+| live-2026-10-26T1150Z | 2026-10-26 11:50 | f75ccd9 | The 402 Index overview with question labels, agent findings, month-on-month lines, favicon and SEO metadata; before the Play time-lapse, the grid sort and the industry ranking switch. |
