@@ -13,3 +13,4 @@ git push
 | Name | Saved (UTC) | Commit | What it is |
 |---|---|---|---|
 | live-2026-10-26T1150Z | 2026-10-26 11:50 | f75ccd9 | The 402 Index overview with question labels, agent findings, month-on-month lines, favicon and SEO metadata; before the Play time-lapse, the grid sort and the industry ranking switch. |
+| live-2026-10-26T1153Z | 2026-10-26 11:53 | 8ee8310 | Adds the Play time-lapse on the 403 section, the one-time 1,000-request grid sort and the industry ranking switch (agent traffic, 403 rate, 402 rate). |
