@@ -3,6 +3,7 @@ import { dateLabel, esc, monthLabel, pct } from "./format";
 import { CAVEATS, EVENTS, REVIEW } from "./events";
 import { initIndustries } from "./industries";
 import { CONTACT_EMAIL } from "./config";
+import { initRankSwitch, rankSwitchHtml } from "./rankswitch";
 import { agentFindings, compareLine, refusedDemand, rising402, spark } from "./lines";
 import type { Dataset, Verification } from "./types";
 
@@ -79,7 +80,10 @@ function main(d: Dataset, v: Verification | null) {
         <p class="field-delta" id="d403"></p>
       </div>
       <div class="field-side">
-        <span class="cap">403 rate by month. Highest ${pct(a403[peak(a403)])} in ${monthLabel(months[peak(a403)])}.</span>
+        <div class="side-top">
+          <span class="cap">403 rate by month. Highest ${pct(a403[peak(a403)])} in ${monthLabel(months[peak(a403)])}.</span>
+          <button type="button" class="play" id="play" aria-label="Play every month"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.2v9.6L10.4 6z" fill="currentColor"/></svg><span>Play</span></button>
+        </div>
         <div class="cells" id="cells403"></div>
         <div class="cell-axis"><span>${monthLabel(months[0])}</span><span>${monthLabel(months[months.length - 1])}</span></div>
       </div>
@@ -106,6 +110,7 @@ function main(d: Dataset, v: Verification | null) {
         <p class="count"><span class="swatch" style="background:var(--blue)"></span><b id="c402"></b><span>were asked to pay<em>Already priced</em></span></p>
         <p class="count"><span class="swatch" style="background:var(--other)"></span><b id="cRest"></b><span>got any other answer</span></p>
         <p class="thousand-note">We count each refusal as potential market: a request the website could price instead of block.</p>
+        <button type="button" class="link-btn replay" id="dots-replay">Replay</button>
       </div>
       <div class="dots" id="dots" role="img"></div>
     </section>
@@ -122,6 +127,7 @@ function main(d: Dataset, v: Verification | null) {
         <a class="m-more" href="#agents" data-view="agents">Every agent</a>
       </div>
     </section>
+    ${rankSwitchHtml()}
     <section class="market reveal">
       <p class="q-label market-q">Where is the opportunity?</p>
       ${
@@ -167,7 +173,10 @@ function main(d: Dataset, v: Verification | null) {
       b.style.background = color(vals[k]);
       b.setAttribute("aria-label", `${monthLabel(m)}: ${code} rate ${pct(vals[k])}`);
       b.title = `${monthLabel(m)}: ${pct(vals[k])}`;
-      b.addEventListener("click", () => setMonth(k));
+      b.addEventListener("click", () => {
+        stopPlay();
+        setMonth(k);
+      });
       host.appendChild(b);
     }
   });
@@ -182,11 +191,12 @@ function main(d: Dataset, v: Verification | null) {
   // ---- Motion (subtle; skipped when the reader prefers reduced motion) ----
   const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const shown = new WeakMap<HTMLElement, number>();
+  let playing = false;
   // Count a big number from its last value to the new one.
   function countTo(el: HTMLElement, to: number) {
     const from = shown.get(el) ?? 0;
     shown.set(el, to);
-    if (calm || from === to) {
+    if (calm || playing || from === to) {
       el.textContent = pct(to);
       return;
     }
@@ -199,28 +209,56 @@ function main(d: Dataset, v: Verification | null) {
     };
     requestAnimationFrame(step);
   }
-  // Fill the 1,000-request grid; the first time it scrolls into view it fills in order.
-  let dotsSeen = calm;
-  let dotTarget = [0, 0];
+  // The 1,000-request grid. Squares start scattered, the way requests arrive, and
+  // group by answer once, the first time the grid scrolls into view. Colour
+  // follows the request; position follows the scattered or grouped layout.
+  let seed = 402;
+  const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const order = [...Array(1000).keys()];
+  for (let i = 999; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  const scatter = new Array<number>(1000);
+  order.forEach((id, slot) => (scatter[id] = slot));
+  let grouped = calm;
+  function placeDots(animate: boolean) {
+    dots.classList.toggle("still", !animate || calm);
+    const cell = dots.clientWidth / 50;
+    dotEls.forEach((el, id) => {
+      const slot = grouped ? id : scatter[id];
+      el.style.transform = `translate(${(slot % 50) * cell}px, ${Math.floor(slot / 50) * cell}px)`;
+    });
+  }
   function paintDots(n3: number, n2: number) {
-    dotTarget = [n3, n2];
-    if (!dotsSeen) return;
-    dotEls.forEach((s, i) => (s.className = i < n3 ? "r" : i < n3 + n2 ? "b" : ""));
+    dotEls.forEach((el, i) => (el.className = i < n3 ? "r" : i < n3 + n2 ? "b" : ""));
   }
-  function fillDots() {
-    const [n3, n2] = dotTarget;
-    const t0 = performance.now();
-    const step = (t: number) => {
-      const upto = Math.min(1000, Math.round(((t - t0) / 900) * 1000));
-      for (let i = 0; i < upto; i++) dotEls[i].className = i < n3 ? "r" : i < n3 + n2 ? "b" : "";
-      if (upto < 1000 && !dotsSeen) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-    setTimeout(() => {
-      dotsSeen = true;
-      paintDots(dotTarget[0], dotTarget[1]);
-    }, 950);
+  function groupDots() {
+    grouped = false;
+    placeDots(false);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        grouped = true;
+        placeDots(true);
+      }),
+    );
   }
+  placeDots(false);
+  new ResizeObserver(() => placeDots(false)).observe(dots);
+  if (!calm) {
+    new IntersectionObserver(
+      (entries, obs) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        obs.disconnect();
+        setTimeout(() => {
+          grouped = true;
+          placeDots(true);
+        }, 250);
+      },
+      { threshold: 0.4 },
+    ).observe(dots);
+  }
+  $("dots-replay").addEventListener("click", groupDots);
   if (calm) document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in"));
   else {
     const io = new IntersectionObserver(
@@ -229,7 +267,6 @@ function main(d: Dataset, v: Verification | null) {
           if (!e.isIntersecting) continue;
           e.target.classList.add("in");
           io.unobserve(e.target);
-          if (e.target.classList.contains("thousand")) fillDots();
         }
       },
       { threshold: 0.15 },
@@ -240,17 +277,54 @@ function main(d: Dataset, v: Verification | null) {
   // ---- Static views ----
   renderAgents(d);
   renderMethod(d, v);
+  initRankSwitch(d);
   const industries = initIndustries($("view-industries"), d, () => state.idx);
 
   // ---- Month control ----
   const slider = $<HTMLInputElement>("month");
   const last = months.length - 1;
   slider.max = String(last);
-  slider.addEventListener("input", () => setMonth(+slider.value));
+  slider.addEventListener("input", () => {
+    stopPlay();
+    setMonth(+slider.value);
+  });
   const prev = $<HTMLButtonElement>("m-prev");
   const next = $<HTMLButtonElement>("m-next");
-  prev.addEventListener("click", () => state.idx > 0 && setMonth(state.idx - 1));
-  next.addEventListener("click", () => state.idx < last && setMonth(state.idx + 1));
+  prev.addEventListener("click", () => {
+    stopPlay();
+    if (state.idx > 0) setMonth(state.idx - 1);
+  });
+  next.addEventListener("click", () => {
+    stopPlay();
+    if (state.idx < last) setMonth(state.idx + 1);
+  });
+  // Play: step through every month in about four seconds, then rest on the latest.
+  const playBtn = $<HTMLButtonElement>("play");
+  let playTimer = 0;
+  function stopPlay() {
+    if (!playing) return;
+    playing = false;
+    clearInterval(playTimer);
+    playBtn.querySelector("span")!.textContent = "Play";
+    playBtn.setAttribute("aria-label", "Play every month");
+  }
+  playBtn.addEventListener("click", () => {
+    if (playing) {
+      stopPlay();
+      setMonth(last);
+      return;
+    }
+    playing = true;
+    playBtn.querySelector("span")!.textContent = "Stop";
+    playBtn.setAttribute("aria-label", "Stop and show the latest month");
+    let k = 0;
+    setMonth(0);
+    playTimer = window.setInterval(() => {
+      k += 1;
+      setMonth(k);
+      if (k >= last) stopPlay();
+    }, 4000 / Math.max(1, last));
+  });
   // One tick per month under the track; January ticks are taller and carry the year.
   $("month-ticks").innerHTML = months
     .map((m) => {
