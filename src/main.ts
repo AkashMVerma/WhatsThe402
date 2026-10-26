@@ -82,7 +82,7 @@ function main(d: Dataset, v: Verification | null) {
       <div class="field-side">
         <div class="side-top">
           <span class="cap">403 rate by month. Highest ${pct(a403[peak(a403)])} in ${monthLabel(months[peak(a403)])}.</span>
-          <button type="button" class="play" id="play" aria-label="Play every month"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.2v9.6L10.4 6z" fill="currentColor"/></svg><span>Play</span></button>
+          <button type="button" class="play" data-play aria-label="Play every month"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.2v9.6L10.4 6z" fill="currentColor"/></svg><span>Play</span></button>
         </div>
         <div class="cells" id="cells403"></div>
         <div class="cell-axis"><span>${monthLabel(months[0])}</span><span>${monthLabel(months[months.length - 1])}</span></div>
@@ -97,7 +97,10 @@ function main(d: Dataset, v: Verification | null) {
         <p class="field-delta" id="d402"></p>
       </div>
       <div class="field-side">
-        <span class="cap">402 rate by month. Highest ${pct(a402[peak(a402)])} in ${monthLabel(months[peak(a402)])}.</span>
+        <div class="side-top">
+          <span class="cap">402 rate by month. Highest ${pct(a402[peak(a402)])} in ${monthLabel(months[peak(a402)])}.</span>
+          <button type="button" class="play" data-play aria-label="Play every month"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.2v9.6L10.4 6z" fill="currentColor"/></svg><span>Play</span></button>
+        </div>
         <div class="cells" id="cells402"></div>
         <div class="cell-axis"><span>${monthLabel(months[0])}</span><span>${monthLabel(months[months.length - 1])}</span></div>
       </div>
@@ -299,24 +302,29 @@ function main(d: Dataset, v: Verification | null) {
     if (state.idx < last) setMonth(state.idx + 1);
   });
   // Play: step through every month in about four seconds, then rest on the latest.
-  const playBtn = $<HTMLButtonElement>("play");
+  // One shared playback; the 403 and 402 sections each have a button for it.
+  const playBtns = [...document.querySelectorAll<HTMLButtonElement>("[data-play]")];
+  const setPlayLabel = (on: boolean) =>
+    playBtns.forEach((b) => {
+      b.querySelector("span")!.textContent = on ? "Stop" : "Play";
+      b.querySelector("path")!.setAttribute("d", on ? "M2 2h8v8H2z" : "M2 1.2v9.6L10.4 6z");
+      b.setAttribute("aria-label", on ? "Stop and show the latest month" : "Play every month");
+    });
   let playTimer = 0;
   function stopPlay() {
     if (!playing) return;
     playing = false;
     clearInterval(playTimer);
-    playBtn.querySelector("span")!.textContent = "Play";
-    playBtn.setAttribute("aria-label", "Play every month");
+    setPlayLabel(false);
   }
-  playBtn.addEventListener("click", () => {
+  const togglePlay = () => {
     if (playing) {
       stopPlay();
       setMonth(last);
       return;
     }
     playing = true;
-    playBtn.querySelector("span")!.textContent = "Stop";
-    playBtn.setAttribute("aria-label", "Stop and show the latest month");
+    setPlayLabel(true);
     let k = 0;
     setMonth(0);
     playTimer = window.setInterval(() => {
@@ -324,7 +332,8 @@ function main(d: Dataset, v: Verification | null) {
       setMonth(k);
       if (k >= last) stopPlay();
     }, 4000 / Math.max(1, last));
-  });
+  };
+  playBtns.forEach((b) => b.addEventListener("click", togglePlay));
   // One tick per month under the track; January ticks are taller and carry the year.
   $("month-ticks").innerHTML = months
     .map((m) => {
