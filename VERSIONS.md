@@ -17,3 +17,4 @@ git push
 | live-2026-10-26T1204Z | 2026-10-26 12:04 | 5454628 | Adds a Play button to the 402 section, sharing one playback with the 403 section. |
 | live-2026-10-29T0731Z | 2026-10-29 07:31 | c87ebed | Fixes cramped links and cut-off industry names, and rewrites copy that read as machine-written. |
 | live-2026-10-29T0741Z | 2026-10-29 07:41 | 349ff5a | Scrolling through the 403 and 402 sections moves through the months, with Skip, Turn off and hand-over by picking a month. |
+| live-2026-10-29T0747Z | 2026-10-29 07:47 | d94db7c | One Play button next to the month slider in the header; removed from the 403 and 402 sections. |
