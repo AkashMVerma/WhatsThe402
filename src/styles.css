@@ -126,6 +126,7 @@ p {
   font-variant-numeric: tabular-nums;
 }
 .step {
+  flex: none;
   display: grid;
   place-items: center;
   width: 32px;
@@ -139,6 +140,15 @@ p {
 }
 .step:hover:not(:disabled) {
   border-color: var(--ink);
+}
+.play-step {
+  margin-left: 4px;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.play-step:hover:not(:disabled) {
+  background: #333333;
 }
 .step:disabled {
   opacity: 0.3;
@@ -1438,6 +1448,21 @@ code {
   }
   .scrub.on > .field {
     padding-bottom: 72px;
+  }
+}
+
+/* Smallest phones: the month row needs every pixel. */
+@media (max-width: 360px) {
+  .month-k {
+    display: none;
+  }
+  .month .step {
+    width: 36px;
+    height: 36px;
+  }
+  .month output {
+    min-width: 0;
+    font-size: 14px;
   }
 }
 

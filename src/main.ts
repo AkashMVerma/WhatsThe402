@@ -89,7 +89,6 @@ function main(d: Dataset, v: Verification | null) {
       <div class="field-side">
         <div class="side-top">
           <span class="cap">403 rate by month. Highest ${pct(a403[peak(a403)])} in ${monthLabel(months[peak(a403)])}.</span>
-          <button type="button" class="play" data-play aria-label="Play every month"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.2v9.6L10.4 6z" fill="currentColor"/></svg><span>Play</span></button>
         </div>
         <div class="cells" id="cells403"></div>
         <div class="cell-axis"><span>${monthLabel(months[0])}</span><span>${monthLabel(months[months.length - 1])}</span></div>
@@ -114,7 +113,6 @@ function main(d: Dataset, v: Verification | null) {
       <div class="field-side">
         <div class="side-top">
           <span class="cap">402 rate by month. Highest ${pct(a402[peak(a402)])} in ${monthLabel(months[peak(a402)])}.</span>
-          <button type="button" class="play" data-play aria-label="Play every month"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.2v9.6L10.4 6z" fill="currentColor"/></svg><span>Play</span></button>
         </div>
         <div class="cells" id="cells402"></div>
         <div class="cell-axis"><span>${monthLabel(months[0])}</span><span>${monthLabel(months[months.length - 1])}</span></div>
@@ -335,8 +333,9 @@ function main(d: Dataset, v: Verification | null) {
   const playBtns = [...document.querySelectorAll<HTMLButtonElement>("[data-play]")];
   const setPlayLabel = (on: boolean) =>
     playBtns.forEach((b) => {
-      b.querySelector("span")!.textContent = on ? "Stop" : "Play";
-      b.querySelector("path")!.setAttribute("d", on ? "M2 2h8v8H2z" : "M2 1.2v9.6L10.4 6z");
+      b.querySelector("path")!.setAttribute("d", on ? "M2.5 2.5h7v7h-7z" : "M2.5 1.2v9.6L10.6 6z");
+      b.title = on ? "Stop" : "Play every month";
+      b.setAttribute("aria-pressed", String(on));
       b.setAttribute("aria-label", on ? "Stop and show the latest month" : "Play every month");
     });
   let playTimer = 0;
