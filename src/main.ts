@@ -64,7 +64,10 @@ function main(d: Dataset, v: Verification | null) {
   ov.innerHTML = `
     <div class="edition reveal">
       <p class="edition-name"><b>The 402 Index</b>, <span data-month></span> <span class="edition-latest" id="ed-latest">latest complete month</span></p>
-      <p class="edition-note">A monthly measure of how websites answer AI agents. The figures are estimates from the requests Cloudflare sees, not every AI agent request on the web. <a href="#method" data-view="method">How we measure</a></p>
+      <div class="edition-text">
+        <p class="edition-note">A monthly measure of how websites answer AI agents. The figures are estimates from the requests Cloudflare sees, not every AI agent request on the web.</p>
+        <a class="more-link" href="#method" data-view="method">How we measure</a>
+      </div>
     </div>
     <div class="kinds reveal" aria-label="Who we count">
       <p><b>AI bots</b>Any automated visitor run by an AI company.</p>
@@ -109,10 +112,10 @@ function main(d: Dataset, v: Verification | null) {
       <div>
         <p class="q-label">What happens to 1,000 agent requests?</p>
         <h2>Out of every 1,000 agent requests in <span data-month></span></h2>
-        <p class="count"><span class="swatch" style="background:var(--red)"></span><b id="c403"></b><span>were refused<em>Demand a price could open</em></span></p>
-        <p class="count"><span class="swatch" style="background:var(--blue)"></span><b id="c402"></b><span>were asked to pay<em>Already priced</em></span></p>
+        <p class="count"><span class="swatch" style="background:var(--red)"></span><b id="c403"></b><span>were refused</span></p>
+        <p class="count"><span class="swatch" style="background:var(--blue)"></span><b id="c402"></b><span>were asked to pay</span></p>
         <p class="count"><span class="swatch" style="background:var(--other)"></span><b id="cRest"></b><span>got any other answer</span></p>
-        <p class="thousand-note">We count each refusal as potential market: a request the website could price instead of block.</p>
+        <p class="thousand-note">We count each refusal as potential market, since the website could have named a price instead of blocking the request.</p>
         <button type="button" class="link-btn replay" id="dots-replay">Replay</button>
       </div>
       <div class="dots" id="dots" role="img"></div>
@@ -153,7 +156,10 @@ function main(d: Dataset, v: Verification | null) {
       </div>
       <a class="m-more" href="#industries" data-view="industries">Every industry</a>
     </section>
-    <p class="limits-line reveal">Shares of requests, not counts. Only websites on Cloudflare. A 402 is a request to pay, not proof of payment. <a href="#method" data-view="method">Every caveat</a></p>
+    <div class="limits-line reveal">
+      <p>Shares of requests, not counts. Only websites on Cloudflare. A 402 is a request to pay, not proof of payment.</p>
+      <a class="more-link" href="#method" data-view="method">Every caveat</a>
+    </div>
     ${
       CONTACT_EMAIL
         ? `<section class="cta reveal">
@@ -509,7 +515,7 @@ function renderMethod(d: Dataset, v: Verification | null) {
     ? `<h2>Checks on this data</h2>
       <div class="checks">
         <div class="check-card"><b>${v.recompute.mismatches === 0 ? "0" : v.recompute.mismatches} mismatches</b><span>${v.recompute.checked.toLocaleString("en")} published figures recomputed from the raw Radar responses.</span></div>
-        <div class="check-card"><b>${v.sanity.failures} failures</b><span>${v.sanity.checked} sanity checks: totals near 100%, complete and contiguous months, no failed requests.</span></div>
+        <div class="check-card"><b>${v.sanity.failures} failures</b><span>${v.sanity.checked} sanity checks on totals, month coverage and failed requests.</span></div>
         ${cc.industries_403_snapshot?.n ? `<div class="check-card"><b>${cc.industries_403_snapshot.medianAbsDiffPP} pts</b><span>Median gap between each industry's 403 rate and the rate implied by Radar's separate traffic and 403 breakdowns.</span></div>` : ""}
         ${live.length ? `<div class="check-card"><b>${Math.max(...live.map((r) => Math.abs(r.diffPP ?? 0))).toFixed(2)} pts</b><span>Largest gap when the headline rates are re-measured from Radar by a different route, ${dateLabel(v.liveCheck!.checkedAt.slice(0, 10))}.</span></div>` : ""}
       </div>
@@ -519,7 +525,6 @@ function renderMethod(d: Dataset, v: Verification | null) {
   if (m.monthsPending.length) gaps.push(`${m.monthsPending.map((x) => monthLabel(x)).join(", ")} could not be pulled and is not shown.`);
   gaps.push("Training-crawler rates are missing for a few industries whose training traffic Radar does not report.");
   gaps.push("Monthly figures by industry cover the 30 industries with the most agent traffic.");
-  gaps.push("Radar can revise recent months. We re-pull every month each day, so revisions show up within a day.");
   $("view-method").innerHTML = `<div class="page">
     <h1>How we measure</h1>
     <p class="sub">The 402 Index is one fixed series, rebuilt from the Cloudflare Radar API every day and checked figure by figure. A month joins the index once it is complete.</p>
@@ -531,17 +536,17 @@ function renderMethod(d: Dataset, v: Verification | null) {
       <dt>403 rate</dt><dd>Of the agent requests in a month or industry, the share answered with 403 Forbidden.</dd>
       <dt>402 rate</dt><dd>The same for 402 Payment Required.</dd>
       <dt>Out of 1,000</dt><dd>The month's 403 and 402 rates times 1,000, rounded. Fewer than one in 1,000 shows as &lt;1.</dd>
-      <dt>Industries</dt><dd>Cloudflare assigns sites to industries by the business that owns them. Radar's industry figures cover only sites that have an industry${sites?.["403"] != null ? `: across those sites, ${pct(sites["403"])} of agent requests got a 403 this year, against ${pct(d.overall.agents["403"])} across all agent traffic` : ""}. Most labels match LinkedIn's industry list; the info icon says what each covers.</dd>
-      <dt>Traffic share</dt><dd>An industry's share of agent requests to sites that have an industry.</dd>
+      <dt>Industries</dt><dd>Cloudflare assigns sites to industries by the business that owns them. Radar's industry figures cover only sites with a known industry.${sites?.["403"] != null ? ` Across those sites, ${pct(sites["403"])} of agent requests got a 403 this year, against ${pct(d.overall.agents["403"])} across all agent traffic.` : ""} Most labels match LinkedIn's industry list, and the info icon on the Industries tab says what each one covers.</dd>
+      <dt>Traffic share</dt><dd>An industry's share of agent requests to sites with a known industry.</dd>
       <dt>Small industries</dt><dd>Industries with under ${m.lowVolumeThresholdPct}% of agent traffic are hidden by default. A few sites can swing their rates.</dd>
       <dt>Updates</dt><dd>Pulled daily from the Cloudflare Radar API. A month appears once it is complete. Last updated ${dateLabel(m.updated)}.</dd>
     </dl>
     ${checks}
     <h2>Events that can move the series</h2>
-    <ul class="facts-list">${EVENTS.map((e) => `<li><b>${esc(e.date)}.</b> ${esc(e.text)} <a href="${e.url}" rel="noopener">Source</a></li>`).join("")}</ul>
+    <dl class="defs">${EVENTS.map((e) => `<dt>${esc(e.date)}</dt><dd>${esc(e.text.replace(/\.$/, ""))} (<a href="${e.url}" rel="noopener">source</a>).</dd>`).join("")}</dl>
     ${REVIEW.length ? `<h2>Under review</h2><ul class="facts-list">${REVIEW.map((r) => `<li>${esc(r.text)}</li>`).join("")}</ul>` : ""}
     <h2>What this data can't tell you</h2>
-    <ul class="facts-list">${CAVEATS.map(([k, t]) => `<li><b>${esc(k)}.</b> ${esc(t)}</li>`).join("")}</ul>
+    <dl class="defs">${CAVEATS.map(([k, t]) => `<dt>${esc(k)}</dt><dd>${esc(t)}</dd>`).join("")}</dl>
     <h2>Licence</h2>
     <p class="sub">Cloudflare publishes Radar data under <a href="https://creativecommons.org/licenses/by-nc/4.0/" rel="noopener">CC BY-NC 4.0</a>. Our figures are derived from it and carry the same licence. Please credit Cloudflare Radar and WhatsThe402.</p>
     <h2>Sources</h2>

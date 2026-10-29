@@ -191,7 +191,7 @@ def shift_note(series):
     latest = series[-1]
     # The biggest move is not the whole story if the rate has moved again since.
     if latest["month"] != cur["month"] and fmt_pct(latest[name]) != fmt_pct(cur[name]):
-        note += f" Latest: {fmt_pct(latest[name])} in {month_label(latest['month'])}."
+        note += f" By {month_label(latest['month'])} it was {fmt_pct(latest[name])}."
     return note
 
 
@@ -312,7 +312,7 @@ def build(p, source_file):
     pulled = date_of(p["pulledAt"])
     sources = p.get("_sources") or [
         f"All series: Radar API /radar/ai/bots/summary, pulled {pulled.day} {MONTHS[pulled.month - 1]} {pulled.year}.",
-        "Monthly status for all AI bots, agents and training crawlers; industry, vertical and agent breakdowns for the snapshot window; monthly agent status for the 30 industries with the most agent traffic.",
+        "Monthly answers to all AI bots, agents and training crawlers, year-to-date breakdowns by industry and by agent, and monthly answers to agents for the 30 industries with the most agent traffic.",
     ]
 
     snap = p["windows"]["snapshot"]

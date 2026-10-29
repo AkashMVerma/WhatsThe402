@@ -5,7 +5,8 @@ import { esc, pct } from "./format";
 import type { Dataset, Industry } from "./types";
 
 type Mode = "traffic" | "403" | "402";
-const RH = 44;
+// Row height: names may wrap to two lines on narrower screens.
+const rowHeight = () => (window.matchMedia("(max-width: 900px)").matches ? 58 : 44);
 
 export function rankSwitchHtml(): string {
   return `<section class="rank reveal">
@@ -48,24 +49,26 @@ export function initRankSwitch(d: Dataset) {
       cls: "vs",
       width: (i) => (i.agentTrafficShare! / maxShare) * 100,
       color: "#9a9a9a",
-      sub: `The 10 industries with the most agent traffic: each one's share of all AI agent requests to sites with a known industry, ${ytd}.`,
+      sub: `The 10 industries that get the most AI agent requests, ranked by their share of agent traffic to sites with a known industry, ${ytd}.`,
     },
     "403": {
       val: (i) => i.agents["403"],
       cls: "vr",
       width: (i) => i.agents["403"],
       color: "var(--red)",
-      sub: `The same 10, ranked by 403 rate: the share of each industry's agent requests the website refused. Bars run 0 to 100%.${sites?.["403"] != null ? ` Across all sites with a known industry: ${pct(sites["403"])}.` : ""}`,
+      sub: `The same 10, ranked by how often websites refused their agent requests (403 rate). Bars run from 0 to 100%.${sites?.["403"] != null ? ` Across all sites with a known industry, ${pct(sites["403"])} were refused.` : ""}`,
     },
     "402": {
       val: (i) => i.agents["402"],
       cls: "vp",
       width: (i) => (i.agents["402"] / max402) * 100,
       color: "var(--blue)",
-      sub: `The same 10, ranked by 402 rate: the share of each industry's agent requests the website asked to be paid for. Bars run 0 to ${max402}%.${sites?.["402"] != null ? ` Across all sites with a known industry: ${pct(sites["402"])}.` : ""}`,
+      sub: `The same 10, ranked by how often websites asked agents to pay (402 rate). Bars run from 0 to ${max402}%.${sites?.["402"] != null ? ` Across all sites with a known industry, ${pct(sites["402"])} were asked to pay.` : ""}`,
     },
   };
 
+  let RH = rowHeight();
+  let current: Mode = "traffic";
   host.style.height = `${inds.length * RH}px`;
   host.innerHTML = inds
     .map(
@@ -76,6 +79,7 @@ export function initRankSwitch(d: Dataset) {
   const buttons = document.querySelectorAll<HTMLButtonElement>(".rank .seg button");
 
   function rank(mode: Mode) {
+    current = mode;
     const m = modes[mode];
     const order = [...inds].sort((a, b) => m.val(b) - m.val(a));
     rows.forEach((r, j) => {
@@ -92,4 +96,13 @@ export function initRankSwitch(d: Dataset) {
   }
   buttons.forEach((b) => b.addEventListener("click", () => rank(b.dataset.mode as Mode)));
   rank("traffic");
+  window.addEventListener("resize", () => {
+    const h = rowHeight();
+    if (h === RH) return;
+    RH = h;
+    host.style.height = `${inds.length * RH}px`;
+    rows.forEach((r) => (r.style.height = `${RH}px`));
+    rank(current);
+  });
+  rows.forEach((r) => (r.style.height = `${RH}px`));
 }

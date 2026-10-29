@@ -30,7 +30,7 @@ export const EVENTS = [
 export const REVIEW = [
   {
     month: "2026-08",
-    text: "Refusals jumped for every kind of AI bot in August 2026, and so did “page not found” answers. That looks more like a change on Cloudflare’s side than thousands of site owners deciding at once, so we treat the month as under review.",
+    text: 'Refusals jumped for every kind of AI bot in August 2026, and so did "page not found" answers. That looks more like a change on Cloudflare\'s side than thousands of site owners deciding at once, so we treat the month as under review.',
   },
 ];
 

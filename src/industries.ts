@@ -99,7 +99,7 @@ export function initIndustries(host: HTMLElement, d: Dataset, getIdx: () => numb
     const shown = state.showAll || state.q ? all : all.slice(0, PAGE);
     const max402 = niceMax(Math.max(1, ...all.map((r) => r.v402)));
     const bench = isMonth ? d.monthly[idx].industrySites : d.overall.industrySites;
-    const benchLabel = isMonth ? "All sites with an industry (est.)" : "All sites with an industry";
+    const benchLabel = isMonth ? "All sites with a known industry (est.)" : "All sites with a known industry";
 
     const bar = (v: number, max: number, color: string) =>
       `<span class="bar" data-k="${color.includes("red") ? "403" : "402"}"><span class="bar-track"><span class="bar-fill" style="width:${Math.min(100, (v / max) * 100).toFixed(1)}%;background:${color}"></span></span><span class="bar-val">${pct(v)}</span></span>`;

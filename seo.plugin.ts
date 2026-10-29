@@ -58,7 +58,7 @@ function head(d: Data): string {
         variableMeasured: [
           { "@type": "PropertyValue", name: "Agent 403 rate", description: "Share of AI agent requests answered 403 Forbidden", unitText: "percent" },
           { "@type": "PropertyValue", name: "Agent 402 rate", description: "Share of AI agent requests answered 402 Payment Required", unitText: "percent" },
-          { "@type": "PropertyValue", name: "Agent traffic share", description: "An industry's share of AI agent requests to sites with an industry", unitText: "percent" },
+          { "@type": "PropertyValue", name: "Agent traffic share", description: "An industry's share of AI agent requests to sites with a known industry", unitText: "percent" },
         ],
         distribution: [
           { "@type": "DataDownload", encodingFormat: "application/json", contentUrl: `${SITE}data/index.json` },
@@ -118,7 +118,7 @@ function summary(d: Data): string {
         <h2>Monthly series, AI agents</h2>
         <table><thead><tr><th>Month</th><th>403 rate</th><th>402 rate</th></tr></thead><tbody>${rows}</tbody></table>
         <h2>Industries, ${esc(d.meta.windows.ytd.label)}</h2>
-        <p>The 30 industries with the most agent traffic. ${sites ? `Across all sites with an industry, ${pct(sites["403"])} of agent requests were refused and ${pct(sites["402"])} asked to pay.` : ""}</p>
+        <p>The 30 industries with the most agent traffic. ${sites ? `Across all sites with a known industry, ${pct(sites["403"])} of agent requests were refused and ${pct(sites["402"])} asked to pay.` : ""}</p>
         <table><thead><tr><th>Industry</th><th>Share of agent traffic</th><th>403 rate</th><th>402 rate</th></tr></thead><tbody>${inds}</tbody></table>
         <h2>Method</h2>
         <p>Agents are bots Cloudflare classifies as acting for a person (crawl purpose "User Action"), such as ChatGPT-User and Claude-User. Every figure is a share of requests, not a count, and covers websites on Cloudflare's network. A 402 is a request to pay, not proof of payment. Data from <a href="${RADAR}">Cloudflare Radar</a>, licensed <a href="${LICENSE}">CC BY-NC 4.0</a>.</p>

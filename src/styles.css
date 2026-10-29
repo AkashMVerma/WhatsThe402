@@ -901,10 +901,19 @@ code {
   color: var(--ink-2);
   max-width: 70ch;
 }
-.edition-note a {
+.more-link {
+  display: inline-block;
+  margin-top: 6px;
   color: var(--ink);
+  font-size: 14px;
   font-weight: 600;
   text-underline-offset: 3px;
+}
+.more-link::after {
+  content: " \2192";
+}
+.edition-text {
+  max-width: 70ch;
 }
 .field-delta {
   margin-top: 10px;
@@ -1106,9 +1115,8 @@ code {
   font-size: 14px;
   color: var(--ink-2);
 }
-.limits-line a {
-  color: var(--ink);
-  font-weight: 600;
+.limits-line .more-link {
+  margin-top: 4px;
 }
 .cta {
   display: flex;
@@ -1308,9 +1316,7 @@ code {
 }
 .rank-row .nm {
   font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.25;
 }
 .rbar {
   position: relative;
@@ -1331,15 +1337,22 @@ code {
   color: var(--ink);
   font-weight: 600;
 }
+@media (max-width: 900px) {
+  .rank-cols,
+  .rank-row {
+    grid-template-columns: 24px minmax(0, 1fr) 84px 72px 80px;
+    gap: 10px;
+  }
+  .rank-cols span:nth-child(3),
+  .rbar {
+    display: none;
+  }
+}
 @media (max-width: 640px) {
   .rank-cols,
   .rank-row {
     grid-template-columns: 20px minmax(0, 1fr) 54px 50px 50px;
     gap: 8px;
-  }
-  .rank-cols span:nth-child(3),
-  .rbar {
-    display: none;
   }
   .rank-row {
     font-size: 14px;
