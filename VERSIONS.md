@@ -15,3 +15,4 @@ git push
 | live-2026-10-26T1150Z | 2026-10-26 11:50 | f75ccd9 | The 402 Index overview with question labels, agent findings, month-on-month lines, favicon and SEO metadata; before the Play time-lapse, the grid sort and the industry ranking switch. |
 | live-2026-10-26T1153Z | 2026-10-26 11:53 | 8ee8310 | Adds the Play time-lapse on the 403 section, the one-time 1,000-request grid sort and the industry ranking switch (agent traffic, 403 rate, 402 rate). |
 | live-2026-10-26T1204Z | 2026-10-26 12:04 | 5454628 | Adds a Play button to the 402 section, sharing one playback with the 403 section. |
+| live-2026-10-29T0731Z | 2026-10-29 07:31 | c87ebed | Fixes cramped links and cut-off industry names, and rewrites copy that read as machine-written. |
