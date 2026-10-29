@@ -4,6 +4,7 @@ import { CAVEATS, EVENTS, REVIEW } from "./events";
 import { initIndustries } from "./industries";
 import { CONTACT_EMAIL } from "./config";
 import { initRankSwitch, rankSwitchHtml } from "./rankswitch";
+import { initScrub } from "./scrub";
 import { agentFindings, compareLine, refusedDemand, rising402, spark } from "./lines";
 import type { Dataset, Verification } from "./types";
 
@@ -54,6 +55,8 @@ function main(d: Dataset, v: Verification | null) {
   const fromUrl = months.indexOf(params.get("m") ?? "");
   const state = { idx: fromUrl >= 0 ? fromUrl : months.length - 1, view: "overview" as View };
 
+  let scrub: ReturnType<typeof initScrub> | null = null;
+
   // ---- Overview markup (built once, updated on month change) ----
   const ov = $("view-overview");
   const rise = rising402(d);
@@ -74,6 +77,7 @@ function main(d: Dataset, v: Verification | null) {
       <p><b>Crawlers</b>Bots that collect pages in bulk, mostly to train models or build search indexes.</p>
       <p class="kinds-us"><b>AI agents</b>Bots fetching a page right now because a person asked, like ChatGPT-User. This index counts these.</p>
     </div>
+    <div class="scrub" data-scrub>
     <section class="field" id="f403">
       <div>
         <p class="q-label">How often are AI agents turned away?</p>
@@ -89,8 +93,16 @@ function main(d: Dataset, v: Verification | null) {
         </div>
         <div class="cells" id="cells403"></div>
         <div class="cell-axis"><span>${monthLabel(months[0])}</span><span>${monthLabel(months[months.length - 1])}</span></div>
+        <button type="button" class="link-btn scrub-on" data-scrub-on hidden>Turn scroll animation back on</button>
+      </div>
+      <div class="scrub-bar" hidden>
+        <span>Scrolling moves through the months</span>
+        <button type="button" data-skip>Skip</button>
+        <button type="button" data-scrub-off>Turn off</button>
       </div>
     </section>
+    </div>
+    <div class="scrub" data-scrub>
     <section class="field" id="f402">
       <div>
         <p class="q-label">How often are they asked to pay?</p>
@@ -106,8 +118,15 @@ function main(d: Dataset, v: Verification | null) {
         </div>
         <div class="cells" id="cells402"></div>
         <div class="cell-axis"><span>${monthLabel(months[0])}</span><span>${monthLabel(months[months.length - 1])}</span></div>
+        <button type="button" class="link-btn scrub-on" data-scrub-on hidden>Turn scroll animation back on</button>
+      </div>
+      <div class="scrub-bar" hidden>
+        <span>Scrolling moves through the months</span>
+        <button type="button" data-skip>Skip</button>
+        <button type="button" data-scrub-off>Turn off</button>
       </div>
     </section>
+    </div>
     <section class="thousand reveal">
       <div>
         <p class="q-label">What happens to 1,000 agent requests?</p>
@@ -184,6 +203,7 @@ function main(d: Dataset, v: Verification | null) {
       b.title = `${monthLabel(m)}: ${pct(vals[k])}`;
       b.addEventListener("click", () => {
         stopPlay();
+        scrub?.handOver();
         setMonth(k);
       });
       host.appendChild(b);
@@ -295,16 +315,19 @@ function main(d: Dataset, v: Verification | null) {
   slider.max = String(last);
   slider.addEventListener("input", () => {
     stopPlay();
+    scrub?.handOver();
     setMonth(+slider.value);
   });
   const prev = $<HTMLButtonElement>("m-prev");
   const next = $<HTMLButtonElement>("m-next");
   prev.addEventListener("click", () => {
     stopPlay();
+    scrub?.handOver();
     if (state.idx > 0) setMonth(state.idx - 1);
   });
   next.addEventListener("click", () => {
     stopPlay();
+    scrub?.handOver();
     if (state.idx < last) setMonth(state.idx + 1);
   });
   // Play: step through every month in about four seconds, then rest on the latest.
@@ -373,7 +396,8 @@ function main(d: Dataset, v: Verification | null) {
     f3.style.color = "#111111";
     f2.style.background = blue(a402[k]);
     f2.style.color = t2(a402[k]) > 0.5 ? "#FFFFFF" : "#111111";
-    $("ed-latest").hidden = k !== months.length - 1;
+    // Keep the tag's space when it is hidden, so nothing below it moves.
+    $("ed-latest").style.visibility = k === months.length - 1 ? "visible" : "hidden";
     $("d403").textContent = compareLine(months, a403, k);
     $("d402").textContent = compareLine(months, a402, k, { peakFirst: true });
     countTo($("n403"), a403[k]);
@@ -399,6 +423,7 @@ function main(d: Dataset, v: Verification | null) {
   // ---- Views ----
   function showView(view: View) {
     state.view = view;
+    if (view === "overview") requestAnimationFrame(() => scrub?.relayout());
     VIEWS.forEach((x) => ($(`view-${x}`).hidden = x !== view));
     document.querySelectorAll<HTMLAnchorElement>(".tabs a").forEach((a) => {
       if (a.dataset.view === view) a.setAttribute("aria-current", "page");
@@ -475,6 +500,10 @@ function main(d: Dataset, v: Verification | null) {
   );
   top.addEventListener("focusin", () => top.classList.remove("tucked"));
 
+  scrub = initScrub(
+    { last: months.length - 1, getIdx: () => state.idx, setMonth, isPlaying: () => playing },
+    { startManual: fromUrl >= 0 && fromUrl !== months.length - 1 },
+  );
   fromHash();
   setMonth(state.idx);
 }
